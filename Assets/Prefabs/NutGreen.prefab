@@ -128,3 +128,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6d521f3ae1fb404dac3aa453e4bddef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  id: 4
+  materials:
+  - {fileID: 2100000, guid: 5dfbc1711848b6149a54c3c6e0e7e6ed, type: 2}
+  - {fileID: 2100000, guid: 4d41748b534cbea4bbc5502909dc496b, type: 2}
+  - {fileID: 2100000, guid: feb36c6f89fc1324696f7584b00ff7df, type: 2}
+  - {fileID: 2100000, guid: 2af87632c39c8b548b566984b2790a34, type: 2}
+  - {fileID: 2100000, guid: 345362e0ba7745143b5e5985f6bd78ac, type: 2}
+  - {fileID: 2100000, guid: be380417c92edd348889d766d8499062, type: 2}
+  meshRenderer: {fileID: 4328254740557735481}

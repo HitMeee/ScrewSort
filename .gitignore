@@ -8,3 +8,8 @@ UserSettings/
 Assembly-CSharp.csproj
 Assembly-CSharp.Player.csproj
 ScrewSort.sln
+DOTween.Modules.csproj
+DOTween.Modules.Player.csproj
+DOTweenPro.EditorScripts.csproj
+DOTweenPro.Scripts.csproj
+DOTweenPro.Scripts.Player.csproj
