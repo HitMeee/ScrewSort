@@ -122,6 +122,54 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &25466214
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 25466215}
+  - component: {fileID: 25466216}
+  m_Layer: 0
+  m_Name: SortScrew
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &25466215
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25466214}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1258060818}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &25466216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25466214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a73ba183a09d3d34c971b01820725382, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mover: {fileID: 0}
+  rules: {fileID: 0}
+  batcher: {fileID: 0}
+  checker: {fileID: 0}
 --- !u!1 &33505591
 GameObject:
   m_ObjectHideFlags: 0
@@ -140,7 +188,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &33505592
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -350,7 +398,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &202855597
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -455,7 +503,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &228947485
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -560,7 +608,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &357177644
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -646,6 +694,53 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &591519390
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 591519392}
+  - component: {fileID: 591519391}
+  m_Layer: 0
+  m_Name: BoltLogicManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &591519391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591519390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be1d67a73903e7941bc951b0046d3cce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allBolts: []
+  moveDuration: 0.3
+  upOffset: 1
+--- !u!4 &591519392
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591519390}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1258060818}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
@@ -760,7 +855,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &707056227
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -950,7 +1045,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 52
+  field of view: 60
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -1001,7 +1096,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1000309376
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1120,6 +1215,8 @@ Transform:
   m_Children:
   - {fileID: 1943911443}
   - {fileID: 2047177271}
+  - {fileID: 591519392}
+  - {fileID: 25466215}
   m_Father: {fileID: 1431089328}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1258060819
@@ -1136,6 +1233,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelController: {fileID: 1943911444}
   inputController: {fileID: 2047177272}
+  boltLogicManager: {fileID: 591519391}
+  sortScrew: {fileID: 25466216}
 --- !u!1 &1431089327
 GameObject:
   m_ObjectHideFlags: 0
@@ -1202,7 +1301,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1483387369
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1307,7 +1406,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1844390363
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1412,7 +1511,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1940439837
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1567,6 +1666,8 @@ MonoBehaviour:
       lsIdScrew: 01000000020000000300000001000000
     - idBolt: 4
       lsIdScrew: 04000000040000000400000003000000
+    - idBolt: 5
+      lsIdScrew: 
 --- !u!1 &2047177270
 GameObject:
   m_ObjectHideFlags: 0
@@ -1611,6 +1712,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c3c31b823adeb14586e47b7158cb8d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boltLogicManager: {fileID: 591519391}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
