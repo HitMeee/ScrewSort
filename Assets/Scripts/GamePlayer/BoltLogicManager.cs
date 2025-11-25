@@ -16,6 +16,9 @@ public class BoltLogicManager : MonoBehaviour
     private ScrewBase currentLiftedScrew;
     private BotlBase currentSourceBolt;
 
+    // ✅ THÊM: Khóa để ngăn xử lý click đồng thời
+    private bool isProcessingClick = false;
+
     public void Init()
     {
         // Auto-calculate optimal lift height nếu chưa set
@@ -57,6 +60,13 @@ public class BoltLogicManager : MonoBehaviour
     {
         if (clickedBolt == null) return;
 
+        // ✅ FIX: Kiểm tra khóa - nếu đang xử lý click khác thì bỏ qua
+        if (isProcessingClick)
+        {
+            Debug.Log("⏳ Đang xử lý click khác, bỏ qua click này");
+            return;
+        }
+
         // ✅ FIX: LẤY BOLTCHECKER ĐỂ KIỂM TRA
         var boltChecker = GamePlayerController.Instance?.gameContaint?.sortScrew?.checker;
 
@@ -69,6 +79,9 @@ public class BoltLogicManager : MonoBehaviour
                 return; // KHÓA - không cho tương tác
             }
 
+            // ✅ KHÓA khi bắt đầu xử lý di chuyển
+            isProcessingClick = true;
+
             // Có screw đang lift → xử lý di chuyển
             if (GamePlayerController.Instance?.gameContaint?.sortScrew != null)
             {
@@ -76,7 +89,14 @@ public class BoltLogicManager : MonoBehaviour
                     currentLiftedScrew, currentSourceBolt, clickedBolt, () =>
                     {
                         ResetCurrentScrew();
+                        // ✅ MỞ KHÓA sau khi hoàn thành di chuyển
+                        isProcessingClick = false;
                     });
+            }
+            else
+            {
+                // ✅ MỞ KHÓA nếu không có sortScrew
+                isProcessingClick = false;
             }
         }
         else
@@ -94,6 +114,8 @@ public class BoltLogicManager : MonoBehaviour
                 ScrewBase topScrew = clickedBolt.GetTopScrew();
                 if (topScrew != null)
                 {
+                    // ✅ KHÓA khi bắt đầu nâng screw
+                    isProcessingClick = true;
                     LiftScrew(topScrew, clickedBolt);
                 }
             }
@@ -106,6 +128,8 @@ public class BoltLogicManager : MonoBehaviour
         {
             currentLiftedScrew = screw;
             currentSourceBolt = sourceBolt;
+            // ✅ MỞ KHÓA sau khi hoàn thành nâng screw
+            isProcessingClick = false;
         });
     }
 
