@@ -37,9 +37,10 @@ public class SortScrew : MonoBehaviour
             return;
         }
 
-        if (target.screwBases.Count >= 5)
+        // ✅ FIX: SỬ DỤNG BOLTCHECKER THAY VÌ KIỂM TRA TRỰC TIẾP
+        if (!checker.CanInteractWithBolt(target))
         {
-            Debug.Log($"TH2: Bolt {target.name} đầy (5/5) - không tương tác");
+            // BoltChecker sẽ tự debug message "KHÓA, KHÔNG THỂ TƯƠNG TÁC"
             lifted.DropToOriginal(mover.moveDuration, onComplete);
             return;
         }
@@ -97,23 +98,20 @@ public class SortScrew : MonoBehaviour
         var batch = batcher.GetBatch(source, moveCount);
         StartCoroutine(mover.MoveBatch(batch, source, target, GetTopPos, () =>
         {
-            checker.IsBoltComplete(target);
-            checker.IsBoltComplete(source);
+            // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA SAU DI CHUYỂN
+            checker.CheckAfterMove(source, target);
             onComplete?.Invoke();
         }));
     }
 
-    // ✅ FIX: Swap với độ cao đồng nhất
     private void HandleSwapDifferentColor(ScrewBase lifted, BotlBase source, BotlBase target,
                                         ScrewBase topTarget, Action onComplete)
     {
-        // Thả lifted về vị trí gốc
         lifted.DropToOriginal(mover.moveDuration, () =>
         {
-            // ✅ Nâng topTarget với config đồng nhất từ BoltLogicManager
             var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
-            float liftHeight = 1.5f; // Default
-            float liftDuration = 0.4f; // Default
+            float liftHeight = 1.5f;
+            float liftDuration = 0.4f;
 
             if (boltManager != null)
             {
@@ -150,8 +148,8 @@ public class SortScrew : MonoBehaviour
 
         StartCoroutine(mover.MoveBatch(batchSame, source, target, GetTopPos, () =>
         {
-            checker.IsBoltComplete(target);
-            checker.IsBoltComplete(source);
+            // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA SAU DI CHUYỂN
+            checker.CheckAfterMove(source, target);
             onComplete?.Invoke();
         }));
     }
@@ -175,24 +173,9 @@ public class SortScrew : MonoBehaviour
         return bolt.transform.position + Vector3.up * 0.2f;
     }
 
+    // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA GAME HOÀN THÀNH
     public bool IsGameComplete(List<BotlBase> allBolts)
     {
-        if (allBolts == null) return false;
-
-        foreach (var bolt in allBolts)
-        {
-            if (bolt?.screwBases == null) continue;
-            if (bolt.screwBases.Count == 0) return false;
-
-            int firstId = bolt.screwBases[0].id;
-            foreach (var screw in bolt.screwBases)
-            {
-                if (screw?.id != firstId) return false;
-            }
-
-            if (bolt.screwBases.Count < 3) return false;
-        }
-
-        return true;
+        return checker.IsGameComplete(allBolts);
     }
 }

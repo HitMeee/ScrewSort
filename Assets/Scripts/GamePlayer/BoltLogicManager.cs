@@ -25,7 +25,6 @@ public class BoltLogicManager : MonoBehaviour
         }
     }
 
-    // ✅ Tính độ cao lift tối ưu dựa trên scene
     private float CalculateOptimalLiftHeight()
     {
         float maxPostHeight = 0f;
@@ -51,7 +50,6 @@ public class BoltLogicManager : MonoBehaviour
             }
         }
 
-        // Thêm buffer để screw nâng cao hơn tất cả post
         return maxPostHeight + 0.8f;
     }
 
@@ -59,8 +57,18 @@ public class BoltLogicManager : MonoBehaviour
     {
         if (clickedBolt == null) return;
 
+        // ✅ FIX: LẤY BOLTCHECKER ĐỂ KIỂM TRA
+        var boltChecker = GamePlayerController.Instance?.gameContaint?.sortScrew?.checker;
+
         if (currentLiftedScrew != null && currentSourceBolt != null)
         {
+            // ✅ FIX: KIỂM TRA CÓ THỂ TƯƠNG TÁC VỚI BOLT ĐÍCH KHÔNG
+            if (boltChecker != null && !boltChecker.CanInteractWithBolt(clickedBolt))
+            {
+                Debug.Log($"❌ Không thể tương tác với bolt {clickedBolt.name} - đã bị khóa!");
+                return; // KHÓA - không cho tương tác
+            }
+
             // Có screw đang lift → xử lý di chuyển
             if (GamePlayerController.Instance?.gameContaint?.sortScrew != null)
             {
@@ -73,6 +81,13 @@ public class BoltLogicManager : MonoBehaviour
         }
         else
         {
+            // ✅ FIX: KIỂM TRA CÓ THỂ NÂNG SCREW TỪ BOLT NÀY KHÔNG
+            if (boltChecker != null && !boltChecker.CanInteractWithBolt(clickedBolt))
+            {
+                Debug.Log($"❌ Không thể nâng screw từ bolt {clickedBolt.name} - đã bị khóa!");
+                return; // KHÓA - không cho nâng screw
+            }
+
             // Không có screw nào lift → nâng screw từ bolt được click
             if (clickedBolt.screwBases.Count > 0)
             {
@@ -85,7 +100,6 @@ public class BoltLogicManager : MonoBehaviour
         }
     }
 
-    // ✅ Nâng screw với độ cao và thời gian đồng nhất
     void LiftScrew(ScrewBase screw, BotlBase sourceBolt)
     {
         screw.LiftUp(uniformLiftHeight, liftDuration, () =>
@@ -115,7 +129,6 @@ public class BoltLogicManager : MonoBehaviour
         return false;
     }
 
-    // ✅ Debug helper
     [ContextMenu("Test Uniform Lift Height")]
     public void TestUniformLiftHeight()
     {
