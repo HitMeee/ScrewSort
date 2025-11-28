@@ -33,6 +33,17 @@ public class BoltLogicManager : MonoBehaviour
             uniformLiftHeight = CalculateOptimalLiftHeight();
         }
 
+        // ✅ FIX: Lấy allBolts từ LevelController
+        if (allBolts == null || allBolts.Count == 0)
+        {
+            var levelController = GamePlayerController.Instance?.gameContaint?.levelController;
+            if (levelController != null)
+            {
+                allBolts = levelController.GetAllBolts();
+                Debug.Log($"✅ Auto-assigned {allBolts.Count} bolts from LevelController");
+            }
+        }
+
         // Khởi tạo lock status cho tất cả bolt
         InitializeBoltLockStatus();
     }
@@ -116,7 +127,7 @@ public class BoltLogicManager : MonoBehaviour
         Debug.Log("✅ Hoàn thành xử lý click queue");
     }
 
-    // ✅ LOGIC XỬ LÝ MỖI CLICK - Độc lập với animation
+    // ✅ LOGIC HOÀN CHỈNH - So sánh screw trên cùng của 2 bolt
     private void ProcessSingleClick(BotlBase clickedBolt)
     {
         // Kiểm tra bolt có bị khóa không
@@ -128,12 +139,49 @@ public class BoltLogicManager : MonoBehaviour
 
         if (currentLiftedScrew != null && currentSourceBolt != null)
         {
-            // Có screw đang lift → xử lý di chuyển
-            HandleScrewMovement(clickedBolt);
+            // ✅ TH1: Click cùng bolt nguồn → drop xuống
+            if (clickedBolt == currentSourceBolt)
+            {
+                Debug.Log($"📍 Click cùng bolt nguồn → drop screw xuống");
+                currentLiftedScrew.DropToOriginal(moveDuration, null);
+                ResetCurrentScrew();
+                return;
+            }
+
+            // ✅ TH2: Click bolt khác → so sánh screw trên cùng
+            ScrewBase targetTopScrew = clickedBolt.GetTopScrew();
+
+            Debug.Log($"🔍 So sánh screw: Lifted ID {currentLiftedScrew.id} vs Target ID {targetTopScrew?.id ?? -1}");
+
+            // ✅ TH2a: Bolt đích trống → gọi logic sort
+            if (targetTopScrew == null)
+            {
+                Debug.Log($"📦 Bolt đích trống → gọi logic sort");
+                HandleScrewMovement(clickedBolt);
+            }
+            // ✅ TH2b: Screw trùng màu → gọi logic sort
+            else if (currentLiftedScrew.id == targetTopScrew.id)
+            {
+                Debug.Log($"✅ Screw trùng màu → gọi logic sort");
+                HandleScrewMovement(clickedBolt);
+            }
+            // ✅ TH2c: Screw khác màu → screw cũ xuống, screw mới lên
+            else
+            {
+                Debug.Log($"❌ Screw khác màu → screw cũ xuống, screw mới lên");
+
+                // Drop screw cũ xuống
+                currentLiftedScrew.DropToOriginal(moveDuration, null);
+                ResetCurrentScrew();
+
+                // Nâng screw mới từ bolt được click
+                HandleLiftScrew(clickedBolt);
+            }
         }
         else
         {
-            // Không có screw nào lift → nâng screw từ bolt được click
+            // ✅ TH3: Chưa có screw nào được lift → nâng screw từ bolt được click
+            Debug.Log($"🔼 Lần click đầu tiên → nâng screw từ {clickedBolt.name}");
             HandleLiftScrew(clickedBolt);
         }
 
@@ -141,14 +189,14 @@ public class BoltLogicManager : MonoBehaviour
         UpdateBoltLockStatus();
     }
 
-    // ✅ XỬ LÝ DI CHUYỂN SCREW
+    // ✅ XỬ LÝ DI CHUYỂN SCREW - Giữ nguyên, gọi SortScrew
     private void HandleScrewMovement(BotlBase targetBolt)
     {
         if (GamePlayerController.Instance?.gameContaint?.sortScrew != null)
         {
-            Debug.Log($"🔄 Xử lý di chuyển screw từ {currentSourceBolt.name} đến {targetBolt.name}");
+            Debug.Log($"🔄 Gọi SortScrew xử lý di chuyển từ {currentSourceBolt.name} đến {targetBolt.name}");
 
-            // Gọi SortScrew xử lý logic di chuyển (không callback)
+            // Gọi SortScrew xử lý logic di chuyển (giữ nguyên logic cũ)
             GamePlayerController.Instance.gameContaint.sortScrew.HandleScrewMovement(
                 currentLiftedScrew, currentSourceBolt, targetBolt);
 
@@ -157,7 +205,7 @@ public class BoltLogicManager : MonoBehaviour
         }
     }
 
-    // ✅ XỬ LÝ NÂNG SCREW
+    // ✅ XỬ LÝ NÂNG SCREW - Giữ nguyên
     private void HandleLiftScrew(BotlBase sourceBolt)
     {
         if (sourceBolt.screwBases.Count > 0)
@@ -223,6 +271,8 @@ public class BoltLogicManager : MonoBehaviour
         if (bolt?.screwBases == null || bolt.screwBases.Count != 5)
             return false;
 
+        if (bolt.screwBases.Count == 0) return false;
+
         int firstId = bolt.screwBases[0].id;
         foreach (var screw in bolt.screwBases)
         {
@@ -246,11 +296,13 @@ public class BoltLogicManager : MonoBehaviour
     {
         currentLiftedScrew = screw;
         currentSourceBolt = sourceBolt;
-        Debug.Log($"📌 Set lifted screw: {screw.id} từ {sourceBolt.name}");
+        Debug.Log($"📌 Set lifted screw: {(screw ? $"ID {screw.id}" : "null")} từ {(sourceBolt ? sourceBolt.name : "null")}");
     }
 
     public bool IsGameComplete()
     {
+        if (allBolts == null || allBolts.Count == 0) return false;
+
         foreach (var bolt in allBolts)
         {
             if (bolt != null && !IsBoltComplete(bolt))
@@ -258,7 +310,31 @@ public class BoltLogicManager : MonoBehaviour
         }
 
         Debug.Log("🏆 GAME HOÀN THÀNH - TẤT CẢ BOLT ĐỀU CÓ 5/5 SCREW CÙNG MÀU!");
-        return allBolts.Count > 0;
+        return true;
+    }
+
+    // ✅ UTILITY METHODS
+    public void ForceResetState()
+    {
+        Debug.Log("🔧 Force reset tất cả trạng thái");
+        ResetCurrentScrew();
+        clickQueue.Clear();
+        isProcessing = false;
+    }
+
+    public bool HasLiftedScrew()
+    {
+        return currentLiftedScrew != null && currentSourceBolt != null;
+    }
+
+    public ScrewBase GetCurrentLiftedScrew()
+    {
+        return currentLiftedScrew;
+    }
+
+    public BotlBase GetCurrentSourceBolt()
+    {
+        return currentSourceBolt;
     }
 
     // ✅ DEBUG METHODS
@@ -274,7 +350,7 @@ public class BoltLogicManager : MonoBehaviour
         Debug.Log("=== BOLT LOCK STATUS ===");
         foreach (var kvp in boltLockStatus)
         {
-            Debug.Log($"{kvp.Key.name}: {(kvp.Value ? "LOCKED" : "UNLOCKED")}");
+            Debug.Log($"{kvp.Key.name}: {(kvp.Value ? "LOCKED" : "UNLOCKED")} (Screws: {kvp.Key.screwBases?.Count ?? 0})");
         }
     }
 
@@ -283,5 +359,12 @@ public class BoltLogicManager : MonoBehaviour
     {
         Debug.Log($"Current uniformLiftHeight: {uniformLiftHeight}");
         Debug.Log($"Calculated optimal: {CalculateOptimalLiftHeight()}");
+    }
+
+    [ContextMenu("Force Reset All")]
+    public void ForceResetAll()
+    {
+        ForceResetState();
+        Debug.Log("🔧 Đã reset tất cả trạng thái");
     }
 }

@@ -1,4 +1,4 @@
- using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,6 @@ public class GamePlayerController : MonoBehaviour
 
     public GameScene gameScene;
     public GameContaint gameContaint;
-    
 
     private void Awake()
     {
@@ -21,9 +20,8 @@ public class GamePlayerController : MonoBehaviour
         gameContaint.Init();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

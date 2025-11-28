@@ -8,6 +8,7 @@ public class LevelController : MonoBehaviour
     [SerializeField] BotlBase botlBase;
     [SerializeField] List<BotlBase> botlBases;
     [SerializeField] LevelData levelDatas;
+
     public void Init()
     {
         for (int i = 0; i < levelDatas.lsDataBolt.Count && i < PostCreateBolts.Count; i++)
@@ -20,16 +21,20 @@ public class LevelController : MonoBehaviour
             botlBases.Add(bolt);
         }
     }
+
+    // ✅ Getter cho BoltLogicManager
+    public List<BotlBase> GetAllBolts()
+    {
+        return botlBases;
+    }
 }
 
 [System.Serializable]
 public class LevelData
 {
-
     public List<DataBolt> lsDataBolt;
-
 }
- 
+
 [System.Serializable]
 public class DataBolt
 {
