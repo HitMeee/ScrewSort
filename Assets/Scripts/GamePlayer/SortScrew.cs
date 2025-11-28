@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class SortScrew : MonoBehaviour
@@ -18,162 +16,238 @@ public class SortScrew : MonoBehaviour
         checker ??= gameObject.AddComponent<BoltChecker>();
     }
 
-    public void HandleScrewMovement(ScrewBase lifted, BotlBase source, BotlBase target, Action onComplete)
+    // ✅ MAIN LOGIC HANDLER - Không có callback
+    public void HandleScrewMovement(ScrewBase lifted, BotlBase source, BotlBase target)
     {
         if (lifted == null || source == null || target == null)
         {
-            onComplete?.Invoke();
+            Debug.LogError("❌ HandleScrewMovement: tham số null");
             return;
         }
 
-        Debug.Log($"=== HANDLE SCREW MOVEMENT ===");
-        Debug.Log($"Lifted: ID {lifted.id} từ {source.name}");
-        Debug.Log($"Target: {target.name} - Count: {target.screwBases.Count}, Slots: {target.SlotsAvailable()}");
+        Debug.Log($"=== XỬ LÝ DI CHUYỂN SCREW ===");
+        Debug.Log($"Screw: ID {lifted.id} từ {source.name} → {target.name}");
 
+        // TH1: Cùng bolt - trả screw xuống
         if (source == target)
         {
-            Debug.Log("TH1: Cùng bolt - thả xuống");
-            lifted.DropToOriginal(mover.moveDuration, onComplete);
+            HandleSameBolt(lifted, source);
             return;
         }
 
-        // ✅ FIX: SỬ DỤNG BOLTCHECKER THAY VÌ KIỂM TRA TRỰC TIẾP
-        if (!checker.CanInteractWithBolt(target))
-        {
-            // BoltChecker sẽ tự debug message "KHÓA, KHÔNG THỂ TƯƠNG TÁC"
-            lifted.DropToOriginal(mover.moveDuration, onComplete);
-            return;
-        }
-
+        // TH2: Bolt khác - xử lý theo tình huống
         if (target.screwBases.Count == 0)
         {
-            Debug.Log("TH3: Bolt trống - di chuyển batch");
-            HandleEmptyTarget(lifted, source, target, onComplete);
-            return;
-        }
-
-        var topTarget = target.GetTopScrew();
-        if (topTarget == null)
-        {
-            Debug.Log("TH4: TopTarget null - thả xuống");
-            lifted.DropToOriginal(mover.moveDuration, onComplete);
-            return;
-        }
-
-        Debug.Log($"TopTarget: ID {topTarget.id}");
-
-        if (topTarget.id != lifted.id)
-        {
-            Debug.Log("TH4a: Screw khác màu - thực hiện swap");
-            HandleSwapDifferentColor(lifted, source, target, topTarget, onComplete);
+            // TH2a: Bolt đích trống
+            HandleEmptyTarget(lifted, source, target);
         }
         else
         {
-            Debug.Log("TH4b: Screw cùng màu - kiểm tra di chuyển batch");
-
-            if (target.SlotsAvailable() <= 0)
+            var topTarget = target.GetTopScrew();
+            if (topTarget == null)
             {
-                Debug.Log("TH4b: Không còn slot trống - thả xuống");
-                lifted.DropToOriginal(mover.moveDuration, onComplete);
+                Debug.LogError($"❌ TopTarget null cho bolt {target.name}");
+                HandleSameBolt(lifted, source);
                 return;
             }
 
-            HandleSameColor(lifted, source, target, onComplete);
+            if (topTarget.id != lifted.id)
+            {
+                // TH2b: Bolt đích có screw khác màu - swap
+                HandleDifferentColor(lifted, source, target, topTarget);
+            }
+            else
+            {
+                // TH2c: Bolt đích có screw cùng màu
+                HandleSameColor(lifted, source, target);
+            }
         }
+
+        // Kiểm tra hoàn thành sau mỗi thao tác
+        checker.CheckAfterMove(source, target);
     }
 
-    private void HandleEmptyTarget(ScrewBase lifted, BotlBase source, BotlBase target, Action onComplete)
+    // ✅ TH1: CÙNG BOLT - Trả screw xuống
+    private void HandleSameBolt(ScrewBase lifted, BotlBase source)
     {
-        int moveCount = batcher.CountConsecutiveScrewsOfSameColor(source, lifted.id);
-        moveCount = Mathf.Min(moveCount, target.SlotsAvailable());
+        Debug.Log($"📍 TH1: Trả screw {lifted.id} xuống {source.name}");
 
-        Debug.Log($"HandleEmptyTarget: moveCount = {moveCount}");
+        // Animation thả xuống (không callback logic)
+        TriggerDropAnimation(lifted);
+    }
+
+    // ✅ TH2A: BOLT TRỐNG - Di chuyển batch
+    private void HandleEmptyTarget(ScrewBase lifted, BotlBase source, BotlBase target)
+    {
+        Debug.Log($"📦 TH2a: Bolt đích {target.name} trống");
+
+        // Đếm số screw liên tiếp cùng màu
+        int consecutiveCount = CountConsecutiveScrews(source, lifted.id);
+        int availableSlots = target.SlotsAvailable();
+        int moveCount = Mathf.Min(consecutiveCount, availableSlots);
+
+        Debug.Log($"Consecutive: {consecutiveCount}, Available: {availableSlots}, Move: {moveCount}");
 
         if (moveCount <= 0)
         {
-            lifted.DropToOriginal(mover.moveDuration, onComplete);
+            Debug.Log("❌ Không thể di chuyển - trả screw xuống");
+            HandleSameBolt(lifted, source);
             return;
         }
 
-        var batch = batcher.GetBatch(source, moveCount);
-        StartCoroutine(mover.MoveBatch(batch, source, target, GetTopPos, () =>
-        {
-            // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA SAU DI CHUYỂN
-            checker.CheckAfterMove(source, target);
-            onComplete?.Invoke();
-        }));
+        // Thực hiện logic di chuyển ngay lập tức
+        ExecuteBatchMove(source, target, moveCount, lifted.id);
     }
 
-    private void HandleSwapDifferentColor(ScrewBase lifted, BotlBase source, BotlBase target,
-                                        ScrewBase topTarget, Action onComplete)
+    // ✅ TH2B: KHÁC MÀU - Swap
+    private void HandleDifferentColor(ScrewBase lifted, BotlBase source, BotlBase target, ScrewBase topTarget)
     {
-        lifted.DropToOriginal(mover.moveDuration, () =>
+        Debug.Log($"🔄 TH2b: Swap {lifted.id} ⟷ {topTarget.id}");
+
+        // BƯỚC 1: Thả screw hiện tại xuống source
+        TriggerDropAnimation(lifted);
+
+        // BƯỚC 2: Nâng screw từ target (logic ngay lập tức)
+        var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
+        if (boltManager != null)
         {
-            var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
-            float liftHeight = 1.5f;
-            float liftDuration = 0.4f;
+            boltManager.SetLiftedScrew(topTarget, target);
 
-            if (boltManager != null)
+            // Trigger animation nâng lên
+            TriggerLiftAnimation(topTarget, boltManager.uniformLiftHeight, boltManager.liftDuration);
+        }
+
+        Debug.Log($"✅ Swap completed: {lifted.id} → {source.name}, {topTarget.id} → lifted");
+    }
+
+    // ✅ TH2C: CÙNG MÀU - Di chuyển batch có kiểm tra
+    private void HandleSameColor(ScrewBase lifted, BotlBase source, BotlBase target)
+    {
+        Debug.Log($"🎯 TH2c: Cùng màu {lifted.id}");
+
+        int availableSlots = target.SlotsAvailable();
+        if (availableSlots <= 0)
+        {
+            Debug.Log("❌ Bolt đích đầy - trả screw xuống");
+            HandleSameBolt(lifted, source);
+            return;
+        }
+
+        // Đếm số screw có thể di chuyển
+        int consecutiveCount = CountConsecutiveScrews(source, lifted.id);
+        int moveCount = Mathf.Min(consecutiveCount, availableSlots);
+
+        Debug.Log($"Cùng màu - Move count: {moveCount}");
+
+        if (moveCount <= 0)
+        {
+            HandleSameBolt(lifted, source);
+            return;
+        }
+
+        // Thực hiện logic di chuyển
+        ExecuteBatchMove(source, target, moveCount, lifted.id);
+    }
+
+    // ✅ ĐẾM SCREW LIÊN TIẾP CÙNG MÀU
+    private int CountConsecutiveScrews(BotlBase bolt, int targetId)
+    {
+        if (bolt?.screwBases == null || bolt.screwBases.Count == 0)
+            return 0;
+
+        int count = 0;
+        for (int i = bolt.screwBases.Count - 1; i >= 0; i--)
+        {
+            if (bolt.screwBases[i]?.id == targetId)
             {
-                liftHeight = boltManager.uniformLiftHeight;
-                liftDuration = boltManager.liftDuration;
+                count++;
             }
-
-            topTarget.LiftUp(liftHeight, liftDuration, () =>
+            else
             {
-                if (boltManager != null)
-                {
-                    boltManager.LiftScrewFromExternal(topTarget, target);
-                }
-                onComplete?.Invoke();
-            });
+                break; // Dừng khi gặp screw khác màu
+            }
+        }
+
+        return count;
+    }
+
+    // ✅ THỰC HIỆN LOGIC DI CHUYỂN BATCH
+    private void ExecuteBatchMove(BotlBase source, BotlBase target, int moveCount, int screwId)
+    {
+        Debug.Log($"🚚 ExecuteBatchMove: {moveCount} screw màu {screwId} từ {source.name} → {target.name}");
+
+        List<ScrewBase> screwsToMove = new List<ScrewBase>();
+
+        // Lấy danh sách screw cần di chuyển (từ top xuống)
+        for (int i = 0; i < moveCount && source.screwBases.Count > 0; i++)
+        {
+            var topScrew = source.GetTopScrew();
+            if (topScrew != null && topScrew.id == screwId)
+            {
+                screwsToMove.Add(topScrew);
+
+                // Cập nhật logic state ngay lập tức
+                source.RemoveScrew(topScrew);
+                target.AddScrew(topScrew);
+                topScrew.transform.SetParent(target.transform);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        Debug.Log($"✅ Logic completed: Moved {screwsToMove.Count} screws");
+
+        // Trigger animation cho tất cả screw đã di chuyển
+        TriggerBatchMoveAnimation(screwsToMove, target);
+    }
+
+    // ✅ ANIMATION TRIGGERS - Không có callback logic
+    private void TriggerDropAnimation(ScrewBase screw)
+    {
+        screw.DropToOriginal(mover.moveDuration, () =>
+        {
+            Debug.Log($"✨ Drop animation completed for screw {screw.id}");
         });
     }
 
-    private void HandleSameColor(ScrewBase lifted, BotlBase source, BotlBase target, Action onComplete)
+    private void TriggerLiftAnimation(ScrewBase screw, float height, float duration)
     {
-        int movable = batcher.GetMovableCount(rules, source, target, lifted);
-
-        Debug.Log($"HandleSameColor: movable = {movable}");
-
-        if (movable <= 0)
+        screw.LiftUp(height, duration, () =>
         {
-            Debug.Log("HandleSameColor: movable <= 0 - thả xuống");
-            lifted.DropToOriginal(mover.moveDuration, onComplete);
-            return;
-        }
-
-        var batchSame = batcher.GetBatch(source, movable);
-        Debug.Log($"Moving batch of {batchSame.Count} screws");
-
-        StartCoroutine(mover.MoveBatch(batchSame, source, target, GetTopPos, () =>
-        {
-            // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA SAU DI CHUYỂN
-            checker.CheckAfterMove(source, target);
-            onComplete?.Invoke();
-        }));
+            Debug.Log($"✨ Lift animation completed for screw {screw.id}");
+        });
     }
 
-    private Vector3 GetTopPos(BotlBase bolt)
+    private void TriggerBatchMoveAnimation(List<ScrewBase> screws, BotlBase target)
     {
-        if (bolt == null) return Vector3.zero;
-
-        int nextIndex = bolt.screwBases.Count;
-
-        if (bolt.postBolts != null && nextIndex < bolt.postBolts.Count && bolt.postBolts[nextIndex] != null)
+        for (int i = 0; i < screws.Count; i++)
         {
-            return bolt.postBolts[nextIndex].transform.position;
-        }
+            var screw = screws[i];
+            Vector3 targetPos = GetCorrectPosition(target, target.screwBases.IndexOf(screw));
 
-        if (bolt.screwBases.Count > 0 && bolt.screwBases[bolt.screwBases.Count - 1] != null)
-        {
-            return bolt.screwBases[bolt.screwBases.Count - 1].transform.position + Vector3.up * 0.3f;
+            screw.MoveTo(targetPos, mover.moveDuration, () =>
+            {
+                Debug.Log($"✨ Move animation completed for screw {screw.id}");
+                screw.originalPosition = targetPos;
+            });
         }
-
-        return bolt.transform.position + Vector3.up * 0.2f;
     }
 
-    // ✅ FIX: SỬ DỤNG BOLTCHECKER ĐỂ KIỂM TRA GAME HOÀN THÀNH
+    // ✅ TÍNH VỊ TRÍ CHÍNH XÁC
+    private Vector3 GetCorrectPosition(BotlBase bolt, int screwIndex)
+    {
+        if (bolt?.postBolts != null && screwIndex >= 0 && screwIndex < bolt.postBolts.Count && bolt.postBolts[screwIndex] != null)
+        {
+            return bolt.postBolts[screwIndex].transform.position;
+        }
+
+        // Fallback
+        return bolt.transform.position + Vector3.up * (screwIndex * 0.3f + 0.2f);
+    }
+
+    // ✅ PUBLIC METHODS
     public bool IsGameComplete(List<BotlBase> allBolts)
     {
         return checker.IsGameComplete(allBolts);
