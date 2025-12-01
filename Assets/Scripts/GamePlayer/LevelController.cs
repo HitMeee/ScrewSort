@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelController : MonoBehaviour
@@ -9,16 +8,13 @@ public class LevelController : MonoBehaviour
     [SerializeField] BotlBase botlBase;
     [SerializeField] LevelData levelDatas;
 
-    [Header("📂 File Loading")]
-    [SerializeField] private bool loadFromFile = false;
-    [SerializeField] private int levelIdToLoad = 1;
-
     private List<BotlBase> botlBases = new List<BotlBase>();
     private bool gameCompleted = false;
     private bool isInitialized = false;
 
     void Start()
     {
+        // Don't auto-load here, let GameScene handle it
         Init();
     }
 
@@ -44,12 +40,6 @@ public class LevelController : MonoBehaviour
         if (isInitialized) return;
 
         gameCompleted = false;
-
-        if (loadFromFile)
-        {
-            LoadLevelFromFile(levelIdToLoad);
-        }
-
         ClearBolts();
 
         if (levelDatas?.lsDataBolt == null || levelDatas.lsDataBolt.Count == 0)
@@ -64,24 +54,6 @@ public class LevelController : MonoBehaviour
 
         isInitialized = true;
         Debug.Log($"✅ Level initialized with {botlBases.Count} bolts");
-    }
-
-    public void LoadLevelFromFile(int levelId)
-    {
-        try
-        {
-            var savedLevel = LevelFileManager.LoadLevel(levelId);
-            if (savedLevel != null)
-            {
-                levelDatas = savedLevel.levelData;
-                levelIdToLoad = levelId;
-                Debug.Log($"📂 Loaded level: {savedLevel.levelName}");
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning($"⚠️ Load error: {e.Message}");
-        }
     }
 
     private void CreateBolt(DataBolt dataBolt, Vector3 position)
@@ -111,7 +83,7 @@ public class LevelController : MonoBehaviour
 
     private void CreateDefaultLevel()
     {
-        levelDatas = new LevelData { lsDataBolt = new List<DataBolt>() };
+        levelDatas = new LevelData();
 
         for (int i = 0; i < 3; i++)
         {
@@ -132,9 +104,8 @@ public class LevelController : MonoBehaviour
         Init();
     }
 
-    public List<BotlBase> GetAllBolts() => botlBases ?? new List<BotlBase>();
-    public int GetCurrentLevelId() => levelIdToLoad;
-    public bool IsInitialized() => isInitialized;
+    public List<BotlBase> GetAllBolts() => botlBases;
+    public int GetCurrentLevelId() => LevelFileManager.GetCurrentLevelId();
 }
 
 [System.Serializable]

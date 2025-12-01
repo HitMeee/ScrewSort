@@ -4,37 +4,52 @@ using UnityEngine.SceneManagement;
 
 public class GameScene : MonoBehaviour
 {
-    [Header("🎮 Game Flow Settings")]
+    [Header("🎮 Game Settings")]
     [SerializeField] private float delayBeforeNext = 2f;
     [SerializeField] private bool autoNextLevel = true;
 
-    [Header("📊 Level Management")]
-    [SerializeField] private bool useFileSystem = true; // Dùng JSON files thay vì scenes
-    [SerializeField] private int currentLevelId = 1;
-
     private bool levelCompleted = false;
+    private LevelController levelController;
+
+    void Start()
+    {
+        Init();
+        LoadFromLevel1(); // Always start from Level 1
+    }
 
     public void Init()
     {
         levelCompleted = false;
+        levelController = FindObjectOfType<LevelController>();
         Debug.Log("🎮 GameScene initialized");
+    }
 
-        // Lấy current level từ LevelController nếu có
-        var levelController = GamePlayerController.Instance?.gameContaint?.levelController;
-        if (levelController != null)
+    // Always load from Level 1 on game start
+    private void LoadFromLevel1()
+    {
+        // Reset to Level 1 when game starts
+        LevelFileManager.SetCurrentLevelId(1);
+
+        var level = LevelFileManager.LoadLevel(1);
+
+        if (level != null)
         {
-            currentLevelId = levelController.GetCurrentLevelId();
+            Debug.Log($"🎯 Starting from Level 1: {level.levelName}");
+            ApplyLevel(level);
+        }
+        else
+        {
+            Debug.Log("⚠️ Level 1 not found, creating default Level 1");
+            CreateDefaultLevel(1);
         }
     }
 
     public void OnLevelComplete()
     {
-        if (levelCompleted) return; // Tránh gọi nhiều lần
+        if (levelCompleted) return;
 
         levelCompleted = true;
-        Debug.Log("🏆 Level Complete! Starting next sequence...");
-
-        ShowWinUI();
+        Debug.Log("🏆 Level Complete!");
 
         if (autoNextLevel)
         {
@@ -42,211 +57,125 @@ public class GameScene : MonoBehaviour
         }
     }
 
-    private void ShowWinUI()
-    {
-        Debug.Log("✨ Showing Win UI...");
-        // TODO: Hiển thị Win Panel, effects, etc.
-    }
-
     private IEnumerator DelayedNext()
     {
-        Debug.Log($"⏰ Waiting {delayBeforeNext} seconds before next level...");
+        Debug.Log($"⏰ Waiting {delayBeforeNext} seconds...");
         yield return new WaitForSeconds(delayBeforeNext);
-
         LoadNextLevel();
     }
 
-    /// <summary>
-    /// Load level tiếp theo
-    /// </summary>
+    // Auto load next level when completed
     public void LoadNextLevel()
     {
-        if (useFileSystem)
+        int nextId = LevelFileManager.GoToNextLevel();
+        var level = LevelFileManager.LoadLevel(nextId);
+
+        if (level != null)
         {
-            LoadNextLevelFromFile();
+            Debug.Log($"➡️ Auto Loading Level {nextId}: {level.levelName}");
+            ApplyLevel(level);
         }
         else
         {
-            LoadNextScene();
+            Debug.Log($"⚠️ Level {nextId} not found, creating default");
+            CreateDefaultLevel(nextId);
         }
     }
 
-    /// <summary>
-    /// Load level tiếp theo từ file JSON (Recommended)
-    /// </summary>
-    private void LoadNextLevelFromFile()
+    private void ApplyLevel(SavedLevel level)
     {
-        int nextLevelId = currentLevelId + 1;
+        if (levelController == null)
+            levelController = FindObjectOfType<LevelController>();
 
-        // Kiểm tra level tiếp theo có tồn tại không
-        var savedLevel = LevelFileManager.LoadLevel(nextLevelId);
-        if (savedLevel != null)
-        {
-            currentLevelId = nextLevelId;
-            Debug.Log($"➡️ Loading Level {currentLevelId}: {savedLevel.levelName}");
-
-            ApplyLevelToGame(savedLevel);
-        }
-        else
-        {
-            // Không có level tiếp theo -> restart từ level 1 hoặc về menu
-            Debug.Log("🎊 All levels completed!");
-            OnAllLevelsComplete();
-        }
-    }
-
-    /// <summary>
-    /// Áp dụng level data vào game
-    /// </summary>
-    private void ApplyLevelToGame(SavedLevel savedLevel)
-    {
-        var levelController = GamePlayerController.Instance?.gameContaint?.levelController;
         if (levelController != null)
         {
-            // Set level data vào LevelController
-            var field = typeof(LevelController).GetField("levelDatas",
+            // Set level data using reflection
+            var dataField = typeof(LevelController).GetField("levelDatas",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            field?.SetValue(levelController, savedLevel.levelData);
+            dataField?.SetValue(levelController, level.levelData);
 
-            // Set level ID
-            var idField = typeof(LevelController).GetField("levelIdToLoad",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            idField?.SetValue(levelController, currentLevelId);
-
-            // Reinit level
             levelController.ForceReinit();
-
-            // Reset completion flag
             levelCompleted = false;
 
-            Debug.Log($"✅ Level {currentLevelId} loaded successfully!");
-        }
-        else
-        {
-            Debug.LogError("❌ LevelController not found!");
+            Debug.Log($"✅ Applied Level {level.levelId}: {level.levelName}");
         }
     }
 
-    /// <summary>
-    /// Load scene tiếp theo (Fallback method)
-    /// </summary>
-    private void LoadNextScene()
+    private void CreateDefaultLevel(int levelId)
     {
-        int currentIndex = SceneManager.GetActiveScene().buildIndex;
-        int maxScenes = SceneManager.sceneCountInBuildSettings;
+        var data = new LevelData();
 
-        if (currentIndex + 1 < maxScenes)
+        // Create 3 default bolts
+        for (int i = 0; i < 3; i++)
         {
-            Debug.Log($"➡️ Loading next scene: Scene {currentIndex + 1}");
-            SceneManager.LoadScene(currentIndex + 1);
-        }
-        else
-        {
-            Debug.Log("🎊 All scenes completed! Going to main menu...");
-            SceneManager.LoadScene(0);
-        }
-    }
-
-    /// <summary>
-    /// Khi hoàn thành tất cả levels
-    /// </summary>
-    private void OnAllLevelsComplete()
-    {
-        Debug.Log("🏆 CONGRATULATIONS! ALL LEVELS COMPLETED!");
-
-        // Option 1: Restart từ level 1
-        RestartFromLevel1();
-
-        // Option 2: Về menu chính
-        // SceneManager.LoadScene(0);
-    }
-
-    /// <summary>
-    /// Restart từ level 1
-    /// </summary>
-    private void RestartFromLevel1()
-    {
-        Debug.Log("🔄 Restarting from Level 1...");
-        currentLevelId = 1;
-
-        var savedLevel = LevelFileManager.LoadLevel(1);
-        if (savedLevel != null)
-        {
-            ApplyLevelToGame(savedLevel);
-        }
-        else
-        {
-            Debug.LogError("❌ Level 1 not found! Creating default level...");
-            ReloadCurrentLevel(); // Fallback to reload
-        }
-    }
-
-    /// <summary>
-    /// Reload level hiện tại
-    /// </summary>
-    public void ReloadCurrentLevel()
-    {
-        if (useFileSystem)
-        {
-            Debug.Log($"🔄 Reloading Level {currentLevelId}...");
-            var savedLevel = LevelFileManager.LoadLevel(currentLevelId);
-            if (savedLevel != null)
+            data.lsDataBolt.Add(new DataBolt
             {
-                ApplyLevelToGame(savedLevel);
-            }
-            else
-            {
-                Debug.Log("🔄 Level not found, reloading scene...");
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            }
+                idBolt = i + 1,
+                lsIdScrew = new System.Collections.Generic.List<int> { 1, 2, 1, 2, 3 }
+            });
         }
-        else
+
+        var level = new SavedLevel
         {
-            Debug.Log("🔄 Reloading current scene...");
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
+            levelId = levelId,
+            levelName = $"Default Level {levelId}",
+            levelData = data
+        };
+
+        ApplyLevel(level);
+
+        // Save default level to PlayerPrefs for future use
+        LevelFileManager.SaveLevel(levelId, level.levelName, level.levelData);
+        Debug.Log($"💾 Auto-saved default Level {levelId}");
     }
 
-    /// <summary>
-    /// Load level theo ID cụ thể
-    /// </summary>
+    // Manual level loading from Level Editor
     public void LoadLevelById(int levelId)
     {
-        var savedLevel = LevelFileManager.LoadLevel(levelId);
-        if (savedLevel != null)
+        LevelFileManager.SetCurrentLevelId(levelId);
+        var level = LevelFileManager.LoadLevel(levelId);
+
+        if (level != null)
         {
-            currentLevelId = levelId;
-            Debug.Log($"📂 Loading Level {levelId}: {savedLevel.levelName}");
-            ApplyLevelToGame(savedLevel);
+            Debug.Log($"🎯 Manually Loading Level {levelId}: {level.levelName}");
+            ApplyLevel(level);
         }
         else
         {
-            Debug.LogError($"❌ Level {levelId} not found!");
+            Debug.Log($"⚠️ Manual load failed, creating default Level {levelId}");
+            CreateDefaultLevel(levelId);
         }
     }
 
-    /// <summary>
-    /// Manual controls (có thể gọi từ UI buttons)
-    /// </summary>
-    public void OnReplayButtonClicked()
+    // UI Button Methods
+    public void OnReplayClicked() => ReloadCurrentLevel();
+    public void OnNextClicked() => LoadNextLevel();
+    public void OnMenuClicked() => SceneManager.LoadScene(0);
+
+    // Restart from Level 1
+    public void RestartFromLevel1()
     {
-        ReloadCurrentLevel();
+        Debug.Log("🔄 Restarting from Level 1");
+        LoadFromLevel1();
     }
 
-    public void OnNextButtonClicked()
+    public void ReloadCurrentLevel()
     {
-        LoadNextLevel();
+        int currentId = LevelFileManager.GetCurrentLevelId();
+        var level = LevelFileManager.LoadLevel(currentId);
+
+        if (level != null)
+        {
+            Debug.Log($"🔄 Reloading Level {currentId}: {level.levelName}");
+            ApplyLevel(level);
+        }
+        else
+        {
+            CreateDefaultLevel(currentId);
+        }
     }
 
-    public void OnMenuButtonClicked()
-    {
-        SceneManager.LoadScene(0); // Về menu chính
-    }
-
-    /// <summary>
-    /// Public getters/setters
-    /// </summary>
-    public int GetCurrentLevelId() => currentLevelId;
-    public void SetCurrentLevelId(int id) => currentLevelId = id;
+    // Getters
+    public int GetCurrentLevelId() => LevelFileManager.GetCurrentLevelId();
     public bool IsLevelCompleted() => levelCompleted;
 }

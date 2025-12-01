@@ -1,124 +1,155 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
 using System.Linq;
 
 public static class LevelFileManager
 {
-    private static string LevelsPath => Path.Combine(Application.streamingAssetsPath, "Levels");
+    private const string LEVEL_KEY = "Level_";
+    private const string CURRENT_KEY = "CurrentLevel";
+    private const string LIST_KEY = "LevelList";
 
-    static LevelFileManager()
+    // Current Level Management
+    public static int GetCurrentLevelId() => PlayerPrefs.GetInt(CURRENT_KEY, 1);
+
+    public static void SetCurrentLevelId(int levelId)
     {
-        if (!Directory.Exists(LevelsPath))
-            Directory.CreateDirectory(LevelsPath);
+        PlayerPrefs.SetInt(CURRENT_KEY, levelId);
+        PlayerPrefs.Save();
     }
 
+    public static int GoToNextLevel()
+    {
+        int next = GetCurrentLevelId() + 1;
+        if (LevelExists(next))
+        {
+            SetCurrentLevelId(next);
+            return next;
+        }
+        else
+        {
+            SetCurrentLevelId(1); // Reset về level 1
+            return 1;
+        }
+    }
+
+    // Save/Load Level
     public static bool SaveLevel(int levelId, string levelName, LevelData levelData)
     {
-        try
+        var saveData = new SavedLevel
         {
-            var saveData = new SavedLevel
-            {
-                levelId = levelId,
-                levelName = levelName,
-                createdDate = System.DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
-                levelData = levelData
-            };
+            levelId = levelId,
+            levelName = levelName,
+            createdDate = System.DateTime.Now.ToString("dd/MM/yyyy"),
+            levelData = levelData
+        };
 
-            string fileName = $"level_{levelId:D3}.json";
-            string filePath = Path.Combine(LevelsPath, fileName);
-            string json = JsonUtility.ToJson(saveData, true);
+        string json = JsonUtility.ToJson(saveData);
+        PlayerPrefs.SetString(LEVEL_KEY + levelId, json);
+        AddToLevelList(levelId);
+        PlayerPrefs.Save();
 
-            File.WriteAllText(filePath, json);
-            Debug.Log($"✅ Saved Level {levelId}: {levelName}");
-            return true;
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"❌ Save failed: {e.Message}");
-            return false;
-        }
+        Debug.Log($"💾 Saved Level {levelId}: {levelName}");
+        return true;
     }
 
     public static SavedLevel LoadLevel(int levelId)
     {
-        try
+        string key = LEVEL_KEY + levelId;
+        if (PlayerPrefs.HasKey(key))
         {
-            string fileName = $"level_{levelId:D3}.json";
-            string filePath = Path.Combine(LevelsPath, fileName);
-
-            if (File.Exists(filePath))
-            {
-                string json = File.ReadAllText(filePath);
-                var result = JsonUtility.FromJson<SavedLevel>(json);
-                Debug.Log($"📂 Loaded Level {levelId}: {result.levelName}");
-                return result;
-            }
-
-            Debug.LogWarning($"⚠️ Level {levelId} not found");
-            return null;
+            string json = PlayerPrefs.GetString(key);
+            return JsonUtility.FromJson<SavedLevel>(json);
         }
-        catch (System.Exception e)
+        return null;
+    }
+
+    // Level List Management
+    public static List<int> GetAllLevelIds()
+    {
+        string listJson = PlayerPrefs.GetString(LIST_KEY, "");
+        if (string.IsNullOrEmpty(listJson)) return new List<int>();
+
+        string[] ids = listJson.Split(',');
+        List<int> result = new List<int>();
+
+        foreach (string id in ids)
         {
-            Debug.LogError($"❌ Load failed: {e.Message}");
-            return null;
+            if (int.TryParse(id, out int levelId))
+                result.Add(levelId);
+        }
+
+        result.Sort();
+        return result;
+    }
+
+    private static void AddToLevelList(int levelId)
+    {
+        List<int> levels = GetAllLevelIds();
+        if (!levels.Contains(levelId))
+        {
+            levels.Add(levelId);
+            levels.Sort();
+            string listString = string.Join(",", levels);
+            PlayerPrefs.SetString(LIST_KEY, listString);
         }
     }
 
-    public static List<int> GetAllLevelIds()
+    // Utility Methods
+    public static bool LevelExists(int levelId)
     {
-        var levelIds = new List<int>();
+        return PlayerPrefs.HasKey(LEVEL_KEY + levelId);
+    }
 
-        if (!Directory.Exists(LevelsPath))
-            return levelIds;
+    public static int GetNextAvailableLevelId()
+    {
+        List<int> existing = GetAllLevelIds();
+        if (existing.Count == 0) return 1;
 
-        var files = Directory.GetFiles(LevelsPath, "level_*.json");
-
-        foreach (var file in files)
+        for (int i = 1; i <= existing.Max() + 1; i++)
         {
-            string fileName = Path.GetFileNameWithoutExtension(file);
-            if (fileName.StartsWith("level_"))
-            {
-                string idStr = fileName.Substring(6);
-                if (int.TryParse(idStr, out int id))
-                {
-                    levelIds.Add(id);
-                }
-            }
+            if (!existing.Contains(i)) return i;
         }
-
-        levelIds.Sort();
-        return levelIds;
+        return existing.Max() + 1;
     }
 
     public static void ListAllLevels()
     {
-        var levels = GetAllLevelIds();
-        Debug.Log($"📋 Found {levels.Count} levels:");
+        List<int> levels = GetAllLevelIds();
+        int current = GetCurrentLevelId();
 
+        Debug.Log($"📋 Found {levels.Count} levels (Current: {current}):");
         foreach (int id in levels)
         {
             var level = LoadLevel(id);
             if (level != null)
             {
-                Debug.Log($"  • Level {level.levelId}: {level.levelName} ({level.createdDate}) - {level.levelData.lsDataBolt.Count} bolts");
+                string marker = (id == current) ? " ← CURRENT" : "";
+                Debug.Log($"  • Level {id}: {level.levelName}{marker}");
             }
         }
     }
 
-    public static int GetNextAvailableLevelId()
+    // Debug Methods
+    public static void DeleteLevel(int levelId)
     {
-        var existingIds = GetAllLevelIds();
+        PlayerPrefs.DeleteKey(LEVEL_KEY + levelId);
+        List<int> levels = GetAllLevelIds();
+        levels.Remove(levelId);
+        string listString = string.Join(",", levels);
+        PlayerPrefs.SetString(LIST_KEY, listString);
+        PlayerPrefs.Save();
+    }
 
-        if (existingIds.Count == 0)
-            return 1;
-
-        for (int i = 1; i <= existingIds.Max() + 1; i++)
+    public static void ClearAllLevels()
+    {
+        List<int> levels = GetAllLevelIds();
+        foreach (int id in levels)
         {
-            if (!existingIds.Contains(i))
-                return i;
+            PlayerPrefs.DeleteKey(LEVEL_KEY + id);
         }
-
-        return existingIds.Max() + 1;
+        PlayerPrefs.DeleteKey(LIST_KEY);
+        PlayerPrefs.DeleteKey(CURRENT_KEY);
+        PlayerPrefs.Save();
+        Debug.Log("🧹 Cleared all levels");
     }
 }

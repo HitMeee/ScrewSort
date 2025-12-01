@@ -69,7 +69,11 @@ public class LevelEditorOdin : MonoBehaviour
     [Button("Save Level", ButtonSizes.Large), GUIColor(0.2f, 0.8f, 0.2f)]
     public void SaveLevel()
     {
-        if (boltSetups.Count == 0) return;
+        if (boltSetups.Count == 0)
+        {
+            Debug.LogWarning("⚠️ No bolt setups to save!");
+            return;
+        }
 
         var gameData = new LevelData { lsDataBolt = new List<DataBolt>() };
         for (int i = 0; i < boltSetups.Count; i++)
@@ -81,32 +85,40 @@ public class LevelEditorOdin : MonoBehaviour
             });
         }
 
-        LevelFileManager.SaveLevel(currentLevelId, levelName, gameData);
+        bool success = LevelFileManager.SaveLevel(currentLevelId, levelName, gameData);
+
+        if (success)
+        {
+            Debug.Log($"✅ Successfully saved Level {currentLevelId}: {levelName}");
+        }
     }
 
     [HorizontalGroup("File")]
-    [Button("Delete All", ButtonSizes.Large), GUIColor(1f, 0.4f, 0.4f)]
-    public void DeleteAll()
+    [Button("Load & Play", ButtonSizes.Large), GUIColor(0.2f, 0.6f, 0.8f)]
+    public void LoadAndPlay()
     {
-        if (levelController == null) levelController = FindObjectOfType<LevelController>();
-
-        if (levelController != null)
+        var savedLevel = LevelFileManager.LoadLevel(currentLevelId);
+        if (savedLevel != null)
         {
-            // Sử dụng reflection để gọi method ClearBolts() private
-            var clearMethod = typeof(LevelController).GetMethod("ClearBolts",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            clearMethod?.Invoke(levelController, null);
+            // Load into editor
+            levelName = savedLevel.levelName;
+            boltSetups.Clear();
+            foreach (var bolt in savedLevel.levelData.lsDataBolt)
+                boltSetups.Add(new BoltSetup { screwIds = new List<int>(bolt.lsIdScrew) });
 
-            // Reset trạng thái level controller
-            var isInitField = typeof(LevelController).GetField("isInitialized",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            isInitField?.SetValue(levelController, false);
+            Debug.Log($"📂 Loaded Level {currentLevelId}: {levelName} into editor");
 
-            Debug.Log("🗑️ Đã xóa tất cả bolt và screw khỏi scene!");
+            // Load into game and set as current level
+            var gameScene = FindObjectOfType<GameScene>();
+            if (gameScene != null)
+            {
+                gameScene.LoadLevelById(currentLevelId);
+                Debug.Log($"🎮 Set Level {currentLevelId} as current game level");
+            }
         }
         else
         {
-            Debug.LogWarning("⚠️ Không tìm thấy LevelController để xóa!");
+            Debug.LogWarning($"⚠️ Level {currentLevelId} not found!");
         }
     }
 
@@ -130,7 +142,31 @@ public class LevelEditorOdin : MonoBehaviour
         field?.SetValue(levelController, gameData);
 
         levelController.ForceReinit();
-        Debug.Log($"✅ Applied Level {currentLevelId}: {levelName}");
+
+        // Set as current level for auto progression
+        LevelFileManager.SetCurrentLevelId(currentLevelId);
+
+        Debug.Log($"✅ Applied Level {currentLevelId}: {levelName} to game");
+    }
+
+    [HorizontalGroup("File")]
+    [Button("Delete All", ButtonSizes.Large), GUIColor(1f, 0.4f, 0.4f)]
+    public void DeleteAll()
+    {
+        if (levelController == null) levelController = FindObjectOfType<LevelController>();
+
+        if (levelController != null)
+        {
+            var clearMethod = typeof(LevelController).GetMethod("ClearBolts",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            clearMethod?.Invoke(levelController, null);
+
+            var isInitField = typeof(LevelController).GetField("isInitialized",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            isInitField?.SetValue(levelController, false);
+
+            Debug.Log("🗑️ Cleared all bolts from scene!");
+        }
     }
 
     [HorizontalGroup("Nav")]
@@ -141,7 +177,11 @@ public class LevelEditorOdin : MonoBehaviour
         if (allIds.Count > 0)
         {
             int index = allIds.IndexOf(currentLevelId);
-            if (index > 0) { currentLevelId = allIds[index - 1]; LoadLevel(); }
+            if (index > 0)
+            {
+                currentLevelId = allIds[index - 1];
+                LoadAndPlay();
+            }
         }
     }
 
@@ -153,26 +193,17 @@ public class LevelEditorOdin : MonoBehaviour
         if (allIds.Count > 0)
         {
             int index = allIds.IndexOf(currentLevelId);
-            if (index >= 0 && index < allIds.Count - 1) { currentLevelId = allIds[index + 1]; LoadLevel(); }
+            if (index >= 0 && index < allIds.Count - 1)
+            {
+                currentLevelId = allIds[index + 1];
+                LoadAndPlay();
+            }
         }
     }
 
     [HorizontalGroup("Nav")]
     [Button("List All")]
     public void ListAllLevels() => LevelFileManager.ListAllLevels();
-
-    // Method LoadLevel vẫn giữ lại để dùng cho navigation
-    private void LoadLevel()
-    {
-        var savedLevel = LevelFileManager.LoadLevel(currentLevelId);
-        if (savedLevel != null)
-        {
-            levelName = savedLevel.levelName;
-            boltSetups.Clear();
-            foreach (var bolt in savedLevel.levelData.lsDataBolt)
-                boltSetups.Add(new BoltSetup { screwIds = new List<int>(bolt.lsIdScrew) });
-        }
-    }
 
     void Start()
     {
