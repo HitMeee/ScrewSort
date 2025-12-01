@@ -271,8 +271,6 @@ public class BoltLogicManager : MonoBehaviour
         if (bolt?.screwBases == null || bolt.screwBases.Count != 5)
             return false;
 
-        if (bolt.screwBases.Count == 0) return false;
-
         int firstId = bolt.screwBases[0].id;
         foreach (var screw in bolt.screwBases)
         {
@@ -303,14 +301,59 @@ public class BoltLogicManager : MonoBehaviour
     {
         if (allBolts == null || allBolts.Count == 0) return false;
 
+        int completedBolts = 0;
+        int totalBoltsWithScrews = 0;
+
         foreach (var bolt in allBolts)
         {
-            if (bolt != null && !IsBoltComplete(bolt))
-                return false;
+            if (bolt?.screwBases != null && bolt.screwBases.Count > 0)
+            {
+                totalBoltsWithScrews++;
+
+                // Kiểm tra bolt có đúng 5 screws cùng màu không
+                if (bolt.screwBases.Count == 5)
+                {
+                    int firstId = bolt.screwBases[0].id;
+                    bool allSameColor = true;
+
+                    foreach (var screw in bolt.screwBases)
+                    {
+                        if (screw == null || screw.id != firstId)
+                        {
+                            allSameColor = false;
+                            break;
+                        }
+                    }
+
+                    if (allSameColor)
+                    {
+                        completedBolts++;
+                        Debug.Log($"✅ Bolt {bolt.name} hoàn thành: 5/5 screws màu {firstId}!");
+                    }
+                    else
+                    {
+                        Debug.Log($"❌ Bolt {bolt.name}: 5 screws nhưng không cùng màu");
+                    }
+                }
+                else
+                {
+                    Debug.Log($"⚠️ Bolt {bolt.name}: chỉ có {bolt.screwBases.Count}/5 screws");
+                }
+            }
         }
 
-        Debug.Log("🏆 GAME HOÀN THÀNH - TẤT CẢ BOLT ĐỀU CÓ 5/5 SCREW CÙNG MÀU!");
-        return true;
+        bool gameComplete = (totalBoltsWithScrews > 0 && completedBolts == totalBoltsWithScrews);
+
+        if (gameComplete)
+        {
+            Debug.Log($"🏆 LEVEL HOÀN THÀNH! {completedBolts}/{totalBoltsWithScrews} bolts có 5/5 screws cùng màu!");
+        }
+        else
+        {
+            Debug.Log($"🔍 Tiến độ: {completedBolts}/{totalBoltsWithScrews} bolts hoàn thành (cần 5/5 screws cùng màu)");
+        }
+
+        return gameComplete;
     }
 
     // ✅ UTILITY METHODS

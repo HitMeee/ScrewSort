@@ -1,0 +1,48 @@
+{
+    "levelId": 1,
+    "levelName": "Easy Level 1",
+    "createdDate": "01/12/2025 21:07",
+    "levelData": {
+        "lsDataBolt": [
+            {
+                "idBolt": 1,
+                "lsIdScrew": [
+                    1,
+                    1,
+                    3,
+                    2
+                ]
+            },
+            {
+                "idBolt": 2,
+                "lsIdScrew": [
+                    1,
+                    1,
+                    2,
+                    2,
+                    3
+                ]
+            },
+            {
+                "idBolt": 3,
+                "lsIdScrew": [
+                    1,
+                    2,
+                    2,
+                    3,
+                    3
+                ]
+            },
+            {
+                "idBolt": 4,
+                "lsIdScrew": [
+                    3
+                ]
+            },
+            {
+                "idBolt": 5,
+                "lsIdScrew": []
+            }
+        ]
+    }
+}
