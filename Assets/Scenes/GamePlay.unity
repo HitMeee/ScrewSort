@@ -279,6 +279,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &130567239
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 130567240}
+  - component: {fileID: 130567241}
+  m_Layer: 0
+  m_Name: LevelEditorOdin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &130567240
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130567239}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1258060818}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &130567241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130567239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82bd0b5394a1f1a4ba0d53b155d0e701, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelController: {fileID: 1943911444}
+  currentLevelId: 1
+  levelName: Level 1
+  boltSetups:
+  - screwIds: 01000000020000000200000001000000
+  - screwIds: 0100000002000000020000000200000001000000
+  - screwIds: 01000000020000000200000002000000
+  - screwIds: 0200000002000000
+  - screwIds: 
 --- !u!1 &185242789
 GameObject:
   m_ObjectHideFlags: 0
@@ -991,6 +1044,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ac408d53ed37834d877219bdd5e405a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  delayBeforeNext: 2
+  autoNextLevel: 1
 --- !u!1 &956595494
 GameObject:
   m_ObjectHideFlags: 0
@@ -1263,6 +1318,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1943911443}
+  - {fileID: 130567240}
   - {fileID: 2047177271}
   - {fileID: 591519392}
   - {fileID: 25466215}
@@ -1836,19 +1892,16 @@ MonoBehaviour:
   - {fileID: 1000309379}
   - {fileID: 1940439840}
   botlBase: {fileID: 7226171028788874725, guid: 0de79a075add6474780d2d0b7819bfb1, type: 3}
-  botlBases: []
   levelDatas:
     lsDataBolt:
     - idBolt: 1
-      lsIdScrew: 01000000030000000300000001000000
-    - idBolt: 1
-      lsIdScrew: 02000000020000000100000002000000
+      lsIdScrew: 01000000020000000200000001000000
     - idBolt: 2
-      lsIdScrew: 03000000040000000400000002000000
+      lsIdScrew: 0100000002000000020000000200000001000000
     - idBolt: 3
-      lsIdScrew: 01000000020000000300000001000000
+      lsIdScrew: 01000000020000000200000002000000
     - idBolt: 4
-      lsIdScrew: 04000000040000000400000003000000
+      lsIdScrew: 0200000002000000
     - idBolt: 5
       lsIdScrew: 
 --- !u!1 &2047177270

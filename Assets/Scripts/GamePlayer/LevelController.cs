@@ -8,14 +8,41 @@ public class LevelController : MonoBehaviour
     [SerializeField] BotlBase botlBase;
     [SerializeField] LevelData levelDatas;
 
+    [Header("🛠️ Helper Tools")]
+    [SerializeField] private AddBolt addBolt;
+    [SerializeField] private BackStep backStep;
+
     private List<BotlBase> botlBases = new List<BotlBase>();
     private bool gameCompleted = false;
     private bool isInitialized = false;
 
     void Start()
     {
-        // Don't auto-load here, let GameScene handle it
+        SetupHelperTools();
         Init();
+    }
+
+    private void SetupHelperTools()
+    {
+        // Auto-setup AddBolt
+        if (addBolt == null)
+        {
+            addBolt = GetComponent<AddBolt>();
+            if (addBolt == null)
+            {
+                addBolt = gameObject.AddComponent<AddBolt>();
+            }
+        }
+
+        // Auto-setup BackStep  
+        if (backStep == null)
+        {
+            backStep = GetComponent<BackStep>();
+            if (backStep == null)
+            {
+                backStep = gameObject.AddComponent<BackStep>();
+            }
+        }
     }
 
     void Update()
@@ -28,12 +55,43 @@ public class LevelController : MonoBehaviour
             gameCompleted = true;
             Debug.Log("🏆 LEVEL COMPLETE!");
 
+            if (backStep != null)
+            {
+                backStep.XoaLichSu();
+            }
+
             if (GamePlayerController.Instance?.gameScene != null)
             {
                 GamePlayerController.Instance.gameScene.OnLevelComplete();
             }
         }
     }
+
+    // ✅ THÊM 2 HÀM ĐƠN GIẢN CHO BUTTON GỌI TRỰC TIẾP:
+
+    // Hàm cho AddBolt Button
+    public void ButtonThemBolt()
+    {
+        Debug.Log("🔘 Button Thêm Bolt được nhấn!");
+
+        if (addBolt != null)
+            addBolt.NutThemBolt();
+        else
+            Debug.LogError("❌ AddBolt component không tìm thấy!");
+    }
+
+    // Hàm cho BackStep Button  
+    public void ButtonQuayLai()
+    {
+        Debug.Log("🔘 Button Quay Lại được nhấn!");
+
+        if (backStep != null)
+            backStep.NutQuayLai();
+        else
+            Debug.LogError("❌ BackStep component không tìm thấy!");
+    }
+
+    // ... rest of existing code ...
 
     public void Init()
     {
@@ -42,14 +100,25 @@ public class LevelController : MonoBehaviour
         gameCompleted = false;
         ClearBolts();
 
+        if (backStep != null)
+        {
+            backStep.XoaLichSu();
+        }
+
         if (levelDatas?.lsDataBolt == null || levelDatas.lsDataBolt.Count == 0)
         {
             CreateDefaultLevel();
         }
 
-        for (int i = 0; i < levelDatas.lsDataBolt.Count && i < PostCreateBolts.Count; i++)
+        if (PostCreateBolts != null && levelDatas.lsDataBolt != null)
         {
-            CreateBolt(levelDatas.lsDataBolt[i], PostCreateBolts[i].position);
+            for (int i = 0; i < levelDatas.lsDataBolt.Count && i < PostCreateBolts.Count; i++)
+            {
+                if (PostCreateBolts[i] != null)
+                {
+                    CreateBolt(levelDatas.lsDataBolt[i], PostCreateBolts[i].position);
+                }
+            }
         }
 
         isInitialized = true;
@@ -58,19 +127,32 @@ public class LevelController : MonoBehaviour
 
     private void CreateBolt(DataBolt dataBolt, Vector3 position)
     {
-        if (botlBase == null) return;
+        if (botlBase == null)
+        {
+            Debug.LogError("❌ BotlBase prefab is null!");
+            return;
+        }
+
+        if (dataBolt == null)
+        {
+            Debug.LogError("❌ DataBolt is null!");
+            return;
+        }
 
         var bolt = Instantiate(botlBase, position, Quaternion.identity);
-        bolt.Init(dataBolt.lsIdScrew);
+        var screwList = dataBolt.lsIdScrew ?? new List<int>();
+        bolt.Init(screwList);
         bolt.name = $"Bolt_{dataBolt.idBolt}";
         botlBases.Add(bolt);
     }
 
     private void ClearBolts()
     {
+        if (botlBases == null) return;
+
         foreach (var bolt in botlBases)
         {
-            if (bolt != null)
+            if (bolt != null && bolt.gameObject != null)
             {
                 if (Application.isPlaying)
                     Destroy(bolt.gameObject);
@@ -101,11 +183,32 @@ public class LevelController : MonoBehaviour
     {
         isInitialized = false;
         gameCompleted = false;
+
+        if (backStep != null)
+        {
+            backStep.XoaLichSu();
+        }
+
         Init();
     }
 
-    public List<BotlBase> GetAllBolts() => botlBases;
-    public int GetCurrentLevelId() => LevelFileManager.GetCurrentLevelId();
+    // Public accessors
+    public AddBolt GetAddBolt() => addBolt;
+    public BackStep GetBackStep() => backStep;
+    public List<BotlBase> GetAllBolts() => botlBases ?? new List<BotlBase>();
+
+    public int GetCurrentLevelId()
+    {
+        try
+        {
+            return LevelFileManager.GetCurrentLevelId();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError("❌ Error getting current level ID: " + ex.Message);
+            return 1;
+        }
+    }
 }
 
 [System.Serializable]
