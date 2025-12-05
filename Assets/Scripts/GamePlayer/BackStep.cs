@@ -3,268 +3,158 @@ using UnityEngine;
 
 public class BackStep : MonoBehaviour
 {
-    [Header("⏪ Quay Lại")]
-    [SerializeField] private int maxBuoc = 10;
+    [Header("⏪ Cài đặt BackStep")]
+    [SerializeField] private int maxSteps = 10;
 
-    private List<BuocLuu> danhSachBuoc = new List<BuocLuu>();
-    private bool dangQuayLai = false;
+    public List<DataBackMove> lsDataBackMove = new List<DataBackMove>();
 
-    void Update()
+    // ✅ LƯU TRẠNG THÁI HIỆN TẠI CỦA TẤT CẢ BOLT
+    public void SaveCurrentState()
     {
-        // Ctrl+Z để undo
-        if (Input.GetKeyDown(KeyCode.Z) && Input.GetKey(KeyCode.LeftControl))
+        var levelController = FindObjectOfType<LevelController>();
+        if (levelController == null) return;
+
+        var allBolts = levelController.GetAllBolts();
+        if (allBolts == null || allBolts.Count == 0) return;
+
+        // Tạo ảnh chụp của toàn bộ trạng thái
+        DataBackMove snapshot = new DataBackMove();
+
+        foreach (var bolt in allBolts)
         {
-            QuayLai();
-        }
-    }
+            if (bolt == null) continue;
 
-    // Quay lại 1 bước
-    public void QuayLai()
-    {
-        if (danhSachBuoc.Count == 0 || dangQuayLai)
-        {
-            Debug.Log("❌ Không thể quay lại!");
-            return;
-        }
-
-        dangQuayLai = true;
-
-        // Lấy bước cuối
-        var buoc = danhSachBuoc[danhSachBuoc.Count - 1];
-        danhSachBuoc.RemoveAt(danhSachBuoc.Count - 1);
-
-        Debug.Log($"⏪ Quay lại: {buoc.loai}");
-
-        // ✅ SỬA: Dùng enum thay vì string
-        switch (buoc.loai)
-        {
-            case LoaiBuoc.DiChuyen:
-                QuayLaiDiChuyen(buoc);
-                break;
-            case LoaiBuoc.DiChuyenNhieu:
-                QuayLaiDiChuyenNhieu(buoc);
-                break;
-            case LoaiBuoc.ThemBolt:
-                QuayLaiThemBolt(buoc);
-                break;
-        }
-
-        dangQuayLai = false;
-        Debug.Log("✅ Đã quay lại!");
-    }
-
-    // ✅ GHI LẠI DI CHUYỂN ĐƠN (cho swap)
-    public void GhiLaiDiChuyenScrew(ScrewBase screw, BotlBase tu, BotlBase den)
-    {
-        if (dangQuayLai || screw == null || tu == null || den == null) return;
-
-        var buoc = new BuocLuu
-        {
-            loai = LoaiBuoc.DiChuyen, // ✅ Dùng enum
-            screw = screw,
-            boltTu = tu,
-            boltDen = den,
-            viTriCu = screw.originalPosition
-        };
-
-        ThemBuoc(buoc);
-        Debug.Log($"📝 Ghi lại: {screw.name} từ {tu.name} đến {den.name}");
-    }
-
-    // ✅ GHI LẠI DI CHUYỂN NHIỀU SCREW (cho batch move)
-    public void GhiLaiDiChuyenNhieuScrew(List<ScrewBase> screws, BotlBase tu, BotlBase den, int mauId)
-    {
-        if (dangQuayLai || screws == null || screws.Count == 0 || tu == null || den == null) return;
-
-        var buoc = new BuocLuu
-        {
-            loai = LoaiBuoc.DiChuyenNhieu, // ✅ Dùng enum
-            danhSachScrew = new List<ScrewBase>(screws), // Copy list
-            boltTu = tu,
-            boltDen = den,
-            mauId = mauId,
-            soLuong = screws.Count
-        };
-
-        ThemBuoc(buoc);
-        Debug.Log($"📝 Ghi lại: {screws.Count} screws màu {mauId} từ {tu.name} đến {den.name}");
-    }
-
-    // Ghi lại thêm bolt
-    public void GhiLaiThemBolt(BotlBase bolt)
-    {
-        if (dangQuayLai || bolt == null) return;
-
-        var buoc = new BuocLuu
-        {
-            loai = LoaiBuoc.ThemBolt, // ✅ Dùng enum
-            boltMoi = bolt
-        };
-
-        ThemBuoc(buoc);
-        Debug.Log($"📝 Ghi lại thêm bolt: {bolt.name}");
-    }
-
-    // Thêm bước vào danh sách
-    private void ThemBuoc(BuocLuu buoc)
-    {
-        danhSachBuoc.Add(buoc);
-
-        // Giới hạn số bước
-        if (danhSachBuoc.Count > maxBuoc)
-        {
-            danhSachBuoc.RemoveAt(0);
-        }
-    }
-
-    // Quay lại di chuyển đơn
-    private void QuayLaiDiChuyen(BuocLuu buoc)
-    {
-        if (buoc.screw == null || buoc.boltTu == null || buoc.boltDen == null) return;
-
-        // Kiểm tra screw còn tồn tại
-        if (buoc.screw.gameObject == null)
-        {
-            Debug.Log("❌ Screw đã mất!");
-            return;
-        }
-
-        Debug.Log($"🔄 Undo đơn: {buoc.screw.name} từ {buoc.boltDen.name} về {buoc.boltTu.name}");
-
-        // Xóa khỏi bolt hiện tại
-        buoc.boltDen.RemoveScrew(buoc.screw);
-
-        // Thêm về bolt cũ
-        buoc.boltTu.AddScrew(buoc.screw);
-        buoc.screw.transform.SetParent(buoc.boltTu.transform);
-
-        // Di chuyển về vị trí đúng
-        Vector3 viTriMoi = LayViTriTrongBolt(buoc.boltTu, buoc.boltTu.screwBases.Count - 1);
-        buoc.screw.MoveTo(viTriMoi, 0.3f, () => {
-            buoc.screw.originalPosition = viTriMoi;
-        });
-    }
-
-    // ✅ Quay lại di chuyển nhiều screw
-    private void QuayLaiDiChuyenNhieu(BuocLuu buoc)
-    {
-        if (buoc.danhSachScrew == null || buoc.danhSachScrew.Count == 0 ||
-            buoc.boltTu == null || buoc.boltDen == null) return;
-
-        Debug.Log($"🔄 Undo batch: {buoc.danhSachScrew.Count} screws màu {buoc.mauId} từ {buoc.boltDen.name} về {buoc.boltTu.name}");
-
-        // Di chuyển từng screw về bolt gốc (ngược lại thứ tự)
-        for (int i = buoc.danhSachScrew.Count - 1; i >= 0; i--)
-        {
-            var screw = buoc.danhSachScrew[i];
-
-            if (screw == null || screw.gameObject == null) continue;
-
-            // Xóa khỏi bolt đích
-            if (buoc.boltDen.screwBases.Contains(screw))
+            BoltSnapshot boltData = new BoltSnapshot
             {
-                buoc.boltDen.RemoveScrew(screw);
+                bolt = bolt,
+                screwsInBolt = new List<ScrewBase>()
+            };
+
+            // Lưu tất cả vít trong bolt này
+            foreach (var screw in bolt.screwBases)
+            {
+                if (screw != null)
+                {
+                    boltData.screwsInBolt.Add(screw);
+                }
             }
 
-            // Thêm về bolt gốc
-            buoc.boltTu.AddScrew(screw);
-            screw.transform.SetParent(buoc.boltTu.transform);
+            snapshot.trangThaiBolts.Add(boltData);
+        }
 
-            // Tính vị trí đúng cho screw này
-            Vector3 viTriMoi = LayViTriTrongBolt(buoc.boltTu, buoc.boltTu.screwBases.Count - 1);
+        lsDataBackMove.Add(snapshot);
 
-            // Animation di chuyển với delay nhỏ
-            float delay = (buoc.danhSachScrew.Count - 1 - i) * 0.1f; // Delay tăng dần
+        // Giới hạn số bước
+        if (lsDataBackMove.Count > maxSteps)
+        {
+            lsDataBackMove.RemoveAt(0);
+        }
 
-            StartCoroutine(DiChuyenSauDelay(screw, viTriMoi, delay));
+        Debug.Log($"📝 Đã lưu trạng thái: {allBolts.Count} bolt");
+    }
+
+    // ✅ QUAY LẠI TRẠNG THÁI TRƯỚC ĐÓ
+    public void GoBack()
+    {
+        if (lsDataBackMove.Count == 0)
+        {
+            Debug.Log("❌ Không có trạng thái nào để quay lại!");
+            return;
+        }
+
+        // Lấy trạng thái trước đó
+        var previousState = lsDataBackMove[lsDataBackMove.Count - 1];
+        lsDataBackMove.RemoveAt(lsDataBackMove.Count - 1);
+
+        Debug.Log("⏪ Đang khôi phục trạng thái...");
+
+        // ✅ KHÔI PHỤC TOÀN BỘ TRẠNG THÁI - KHÔNG CÓ ANIMATION
+        RestoreState(previousState);
+
+        Debug.Log("✅ Đã khôi phục về trạng thái trước!");
+    }
+
+    // ✅ KHÔI PHỤC TRẠNG THÁI (DỊCH CHUYỂN TỨC THỜI)
+    private void RestoreState(DataBackMove state)
+    {
+        foreach (var boltSnapshot in state.trangThaiBolts)
+        {
+            if (boltSnapshot.bolt == null) continue;
+
+            var bolt = boltSnapshot.bolt;
+
+            // Xóa các vít hiện tại trong bolt
+            bolt.screwBases.Clear();
+
+            // Khôi phục vít theo đúng thứ tự
+            foreach (var screw in boltSnapshot.screwsInBolt)
+            {
+                if (screw != null && screw.gameObject != null)
+                {
+                    // Thêm vào bolt
+                    bolt.screwBases.Add(screw);
+
+                    // Đặt parent
+                    screw.transform.SetParent(bolt.transform);
+
+                    // ✅ DỊCH CHUYỂN TỨC THỜI - KHÔNG CÓ ANIMATION
+                    Vector3 correctPos = GetCorrectPosition(bolt, bolt.screwBases.Count - 1);
+                    screw.transform.position = correctPos;
+                    screw.originalPosition = correctPos;
+
+                    // Đảm bảo vít không bị nâng lên
+                    screw.isLifted = false;
+                }
+            }
+        }
+
+        // ✅ RESET TRẠNG THÁI VÍT BỊ NÂNG
+        var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
+        if (boltManager != null)
+        {
+            boltManager.ForceResetState();
         }
     }
 
-    // ✅ HELPER: Di chuyển sau delay
-    private System.Collections.IEnumerator DiChuyenSauDelay(ScrewBase screw, Vector3 viTri, float delay)
+    // Tính toán vị trí chính xác trong bolt
+    private Vector3 GetCorrectPosition(BotlBase bolt, int index)
     {
-        yield return new WaitForSeconds(delay);
-
-        if (screw != null && screw.gameObject != null)
+        if (bolt?.postBolts != null && index >= 0 && index < bolt.postBolts.Count)
         {
-            screw.MoveTo(viTri, 0.3f, () => {
-                screw.originalPosition = viTri;
-            });
+            return bolt.postBolts[index].transform.position;
         }
+        return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f);
     }
 
-    // Quay lại thêm bolt
-    private void QuayLaiThemBolt(BuocLuu buoc)
+    // ✅ Nút UI
+    public void ButtonGoBack()
     {
-        if (buoc.boltMoi == null || buoc.boltMoi.gameObject == null) return;
-
-        Debug.Log($"🗑️ Undo thêm bolt: {buoc.boltMoi.name}");
-
-        // Xóa khỏi level
-        var level = FindObjectOfType<LevelController>();
-        if (level != null)
-        {
-            var bolts = level.GetAllBolts();
-            bolts.Remove(buoc.boltMoi);
-        }
-
-        // Hủy bolt
-        Destroy(buoc.boltMoi.gameObject);
-    }
-
-    // Lấy vị trí trong bolt
-    private Vector3 LayViTriTrongBolt(BotlBase bolt, int thuTu)
-    {
-        if (bolt.postBolts != null && thuTu < bolt.postBolts.Count && thuTu >= 0)
-        {
-            return bolt.postBolts[thuTu].transform.position;
-        }
-        return bolt.transform.position + Vector3.up * (thuTu * 0.3f);
+        GoBack();
     }
 
     // Xóa lịch sử
-    public void XoaLichSu()
+    public void ClearHistory()
     {
-        danhSachBuoc.Clear();
-        Debug.Log("🗑️ Đã xóa lịch sử");
+        lsDataBackMove.Clear();
+        Debug.Log("🗑️ Đã xóa lịch sử BackStep");
     }
 
-    // Button UI
-    public void NutQuayLai()
-    {
-        QuayLai();
-    }
-
-    // Getters
-    public bool CoLichSu() => danhSachBuoc.Count > 0;
-    public int SoBuoc() => danhSachBuoc.Count;
+    // Getter
+    public bool HasHistory() => lsDataBackMove.Count > 0;
+    public int StepCount() => lsDataBackMove.Count;
 }
 
-// ✅ ENUM CHO LOẠI BƯỚC
-public enum LoaiBuoc
-{
-    DiChuyen,       // Di chuyển 1 screw (swap)
-    DiChuyenNhieu,  // Di chuyển nhiều screw (batch move)
-    ThemBolt        // Thêm bolt mới
-}
-
-// ✅ CẬP NHẬT: Class lưu bước với enum
+// ✅ CLASS ĐỂ LƯU TOÀN BỘ TRẠNG THÁI
 [System.Serializable]
-public class BuocLuu
+public class DataBackMove
 {
-    public LoaiBuoc loai; // ✅ Dùng enum thay vì string
+    public List<BoltSnapshot> trangThaiBolts = new List<BoltSnapshot>();
+}
 
-    // Cho di chuyển đơn
-    public ScrewBase screw;
-    public BotlBase boltTu;
-    public BotlBase boltDen;
-    public Vector3 viTriCu;
-
-    // ✅ Cho di chuyển nhiều screw
-    public List<ScrewBase> danhSachScrew;
-    public int mauId;
-    public int soLuong;
-
-    // Cho thêm bolt
-    public BotlBase boltMoi;
+// ✅ CLASS ĐỂ LƯU TRẠNG THÁI 1 BOLT
+[System.Serializable]
+public class BoltSnapshot
+{
+    public BotlBase bolt;                    // Bolt này
+    public List<ScrewBase> screwsInBolt;     // Tất cả vít trong bolt theo đúng thứ tự
 }

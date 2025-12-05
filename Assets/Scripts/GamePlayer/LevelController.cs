@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class LevelController : MonoBehaviour
 {
-    [Header("🎮 Level Setup")]
-    [SerializeField] List<Transform> PostCreateBolts;
+    [Header("🎮 Thiết lập Level")]
+    public List<Transform> PostCreateBolts;
     [SerializeField] BotlBase botlBase;
     [SerializeField] LevelData levelDatas;
 
-    [Header("🛠️ Helper Tools")]
+    [Header("🛠️ Công cụ hỗ trợ")]
     [SerializeField] private AddBolt addBolt;
     [SerializeField] private BackStep backStep;
 
@@ -24,7 +24,7 @@ public class LevelController : MonoBehaviour
 
     private void SetupHelperTools()
     {
-        // Auto-setup AddBolt
+        // Tự động thiết lập AddBolt
         if (addBolt == null)
         {
             addBolt = GetComponent<AddBolt>();
@@ -34,7 +34,7 @@ public class LevelController : MonoBehaviour
             }
         }
 
-        // Auto-setup BackStep  
+        // Tự động thiết lập BackStep  
         if (backStep == null)
         {
             backStep = GetComponent<BackStep>();
@@ -53,11 +53,11 @@ public class LevelController : MonoBehaviour
         if (boltManager != null && boltManager.IsGameComplete())
         {
             gameCompleted = true;
-            Debug.Log("🏆 LEVEL COMPLETE!");
+            Debug.Log("🏆 HOÀN THÀNH LEVEL!");
 
             if (backStep != null)
             {
-                backStep.XoaLichSu();
+                backStep.ClearHistory(); // ✅ SỬA: Sử dụng đúng tên phương thức
             }
 
             if (GamePlayerController.Instance?.gameScene != null)
@@ -67,7 +67,7 @@ public class LevelController : MonoBehaviour
         }
     }
 
-    // ✅ THÊM 2 HÀM ĐƠN GIẢN CHO BUTTON GỌI TRỰC TIẾP:
+    // ✅ SỬA: THÊM 2 HÀM ĐƠN GIẢN CHO BUTTON GỌI TRỰC TIẾP
 
     // Hàm cho AddBolt Button
     public void ButtonThemBolt()
@@ -75,7 +75,7 @@ public class LevelController : MonoBehaviour
         Debug.Log("🔘 Button Thêm Bolt được nhấn!");
 
         if (addBolt != null)
-            addBolt.NutThemBolt();
+            addBolt.ButtonAddBolt(); // ✅ SỬA: Sử dụng đúng tên phương thức
         else
             Debug.LogError("❌ AddBolt component không tìm thấy!");
     }
@@ -86,12 +86,10 @@ public class LevelController : MonoBehaviour
         Debug.Log("🔘 Button Quay Lại được nhấn!");
 
         if (backStep != null)
-            backStep.NutQuayLai();
+            backStep.ButtonGoBack(); // ✅ SỬA: Sử dụng đúng tên phương thức
         else
             Debug.LogError("❌ BackStep component không tìm thấy!");
     }
-
-    // ... rest of existing code ...
 
     public void Init()
     {
@@ -102,7 +100,7 @@ public class LevelController : MonoBehaviour
 
         if (backStep != null)
         {
-            backStep.XoaLichSu();
+            backStep.ClearHistory(); // ✅ SỬA: Sử dụng đúng tên phương thức
         }
 
         if (levelDatas?.lsDataBolt == null || levelDatas.lsDataBolt.Count == 0)
@@ -122,7 +120,7 @@ public class LevelController : MonoBehaviour
         }
 
         isInitialized = true;
-        Debug.Log($"✅ Level initialized with {botlBases.Count} bolts");
+        Debug.Log($"✅ Level được khởi tạo với {botlBases.Count} bolts");
     }
 
     private void CreateBolt(DataBolt dataBolt, Vector3 position)
@@ -176,7 +174,7 @@ public class LevelController : MonoBehaviour
             });
         }
 
-        Debug.Log("🔧 Created default level");
+        Debug.Log("🔧 Tạo level mặc định");
     }
 
     public void ForceReinit()
@@ -186,7 +184,7 @@ public class LevelController : MonoBehaviour
 
         if (backStep != null)
         {
-            backStep.XoaLichSu();
+            backStep.ClearHistory(); // ✅ SỬA: Sử dụng đúng tên phương thức
         }
 
         Init();
@@ -205,7 +203,7 @@ public class LevelController : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError("❌ Error getting current level ID: " + ex.Message);
+            Debug.LogError("❌ Lỗi khi lấy current level ID: " + ex.Message);
             return 1;
         }
     }

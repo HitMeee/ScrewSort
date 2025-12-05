@@ -3,196 +3,67 @@ using UnityEngine;
 
 public class AddBolt : MonoBehaviour
 {
-    [Header("🔧 Thêm Bolt Trống")]
+    [Header("🔧 Thêm Bolt Rỗng")]
     [SerializeField] private LevelController levelController;
     [SerializeField] private BotlBase boltPrefab;
-    [SerializeField] private int maxBolts = 6;
 
     void Start()
     {
-        Debug.Log("🔧 AddBolt Start() - Component initialized");
-
         if (levelController == null)
-        {
             levelController = FindObjectOfType<LevelController>();
-            if (levelController != null)
-                Debug.Log("✅ Found LevelController automatically");
-            else
-                Debug.LogError("❌ LevelController not found!");
-        }
 
         if (boltPrefab == null)
-        {
-            var existingBolt = FindObjectOfType<BotlBase>();
-            if (existingBolt != null)
-            {
-                boltPrefab = existingBolt;
-                Debug.Log("✅ Found BotlBase prefab automatically");
-            }
-            else
-            {
-                Debug.LogError("❌ BotlBase prefab not found!");
-            }
-        }
+            boltPrefab = FindObjectOfType<BotlBase>();
     }
 
-    public void ThemBoltTrong()
+    // ✅ Phương thức nút UI
+    public void ButtonAddBolt()
     {
-        Debug.Log("🔧 === THÊM BOLT TRỐNG ===");
+        AddEmptyBolt();
+    }
 
-        if (!CoTheThemBolt())
+    // ✅ ĐƠN GIẢN: Thêm bolt vào vị trí PostCreateBolts tiếp theo
+    public void AddEmptyBolt()
+    {
+        if (levelController == null || boltPrefab == null) return;
+
+        var allBolts = levelController.GetAllBolts();
+        var postCreateBolts = levelController.PostCreateBolts;
+
+        // Kiểm tra xem có thể thêm nhiều hơn không
+        if (allBolts.Count >= postCreateBolts.Count)
         {
-            Debug.LogWarning("❌ Không thể thêm bolt - đã đạt tối đa hoặc lỗi!");
+            Debug.Log("❌ Không còn vị trí nào để thêm bolt!");
             return;
         }
 
-        Vector3 viTriMoi = TimViTriTiepTheo();
-        Debug.Log($"📍 Vị trí mới: {viTriMoi}");
-
-        BotlBase boltMoi = TaoBoltTrong(viTriMoi);
-
-        if (boltMoi != null)
+        // ✅ Lưu trạng thái trước khi thêm
+        var backStep = levelController.GetBackStep();
+        if (backStep != null)
         {
-            ThemVaoDanhSach(boltMoi);
-
-            // ✅ GHI LẠI CHO BACKSTEP
-            var backStep = levelController.GetBackStep();
-            if (backStep != null)
-            {
-                backStep.GhiLaiThemBolt(boltMoi);
-                Debug.Log("📝 Đã ghi lại action cho BackStep");
-            }
-
-            Debug.Log("✅ ĐÃ THÊM BOLT THÀNH CÔNG!");
+            backStep.SaveCurrentState();
         }
-        else
-        {
-            Debug.LogError("❌ Không thể tạo bolt mới!");
-        }
+
+        // ✅ Lấy vị trí tiếp theo từ PostCreateBolts
+        Vector3 position = postCreateBolts[allBolts.Count].position;
+
+        // ✅ Tạo bolt rỗng
+        BotlBase newBolt = Instantiate(boltPrefab, position, Quaternion.identity);
+        newBolt.Init(new List<int>()); // Bolt rỗng
+        newBolt.name = "EmptyBolt_" + (allBolts.Count + 1);
+
+        // ✅ Thêm vào danh sách
+        allBolts.Add(newBolt);
+
+        Debug.Log($"✅ Đã thêm bolt tại vị trí {allBolts.Count - 1}: {position}");
     }
 
-    private bool CoTheThemBolt()
+    // Getter đơn giản
+    public bool CanAddBolt()
     {
-        if (levelController == null)
-        {
-            Debug.LogError("❌ LevelController is null!");
-            return false;
-        }
-
-        var danhSachBolt = levelController.GetAllBolts();
-        if (danhSachBolt == null)
-        {
-            Debug.LogError("❌ GetAllBolts returned null!");
-            return false;
-        }
-
-        // ✅ SỬA: Kiểm tra cả PostCreateBolts
-        var postCreateBolts = GetPostCreateBolts();
-        if (postCreateBolts == null || postCreateBolts.Count == 0)
-        {
-            Debug.LogError("❌ PostCreateBolts không có sẵn!");
-            return false;
-        }
-
-        bool canAdd = danhSachBolt.Count < postCreateBolts.Count && danhSachBolt.Count < maxBolts;
-        Debug.Log($"📊 Bolts hiện tại: {danhSachBolt.Count}/{postCreateBolts.Count} PostCreateBolts, Max: {maxBolts} - Có thể thêm: {canAdd}");
-        return canAdd;
+        if (levelController == null) return false;
+        var allBolts = levelController.GetAllBolts();
+        var postCreateBolts = levelController.PostCreateBolts;
+        return allBolts.Count < postCreateBolts.Count;
     }
-
-    // ✅ SỬA: Sử dụng PostCreateBolts từ LevelController
-    private Vector3 TimViTriTiepTheo()
-    {
-        var danhSachBolt = levelController.GetAllBolts();
-        var postCreateBolts = GetPostCreateBolts();
-
-        if (postCreateBolts != null && danhSachBolt.Count < postCreateBolts.Count)
-        {
-            // Sử dụng vị trí tiếp theo từ PostCreateBolts
-            var nextTransform = postCreateBolts[danhSachBolt.Count];
-            if (nextTransform != null)
-            {
-                Debug.Log($"📍 Sử dụng PostCreateBolts[{danhSachBolt.Count}]: {nextTransform.position}");
-                return nextTransform.position;
-            }
-        }
-
-        // Fallback: tính toán vị trí dự phòng
-        if (danhSachBolt.Count > 0)
-        {
-            var boltCuoi = danhSachBolt[danhSachBolt.Count - 1];
-            Vector3 newPos = boltCuoi.transform.position + Vector3.right * 2f;
-            Debug.LogWarning($"⚠️ Fallback position: {newPos}");
-            return newPos;
-        }
-
-        Debug.LogWarning("⚠️ Using Vector3.zero as fallback");
-        return Vector3.zero;
-    }
-
-    // ✅ THÊM: Method để lấy PostCreateBolts từ LevelController
-    private List<Transform> GetPostCreateBolts()
-    {
-        if (levelController == null) return null;
-
-        // Sử dụng reflection để truy cập PostCreateBolts private field
-        var field = typeof(LevelController).GetField("PostCreateBolts",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-        if (field != null)
-        {
-            return field.GetValue(levelController) as List<Transform>;
-        }
-
-        return null;
-    }
-
-    private BotlBase TaoBoltTrong(Vector3 viTri)
-    {
-        if (boltPrefab == null)
-        {
-            Debug.LogError("❌ BoltPrefab is null - cannot create bolt!");
-            return null;
-        }
-
-        try
-        {
-            BotlBase boltMoi = Instantiate(boltPrefab, viTri, Quaternion.identity);
-            List<int> danhSachTrong = new List<int>(); // Bolt trống
-            boltMoi.Init(danhSachTrong);
-            boltMoi.name = "BoltTrong_" + (levelController.GetAllBolts().Count + 1);
-
-            Debug.Log($"✅ Đã tạo bolt: {boltMoi.name} tại {viTri}");
-            return boltMoi;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"❌ Lỗi khi tạo bolt: {ex.Message}");
-            return null;
-        }
-    }
-
-    private void ThemVaoDanhSach(BotlBase boltMoi)
-    {
-        var danhSach = levelController.GetAllBolts();
-        danhSach.Add(boltMoi);
-        Debug.Log($"📋 Đã thêm vào danh sách. Tổng: {danhSach.Count}");
-    }
-
-    // Hàm cho Button UI
-    public void NutThemBolt()
-    {
-        Debug.Log("🔘 === NUT THÊM BOLT ĐƯỢC NHẤN ===");
-        ThemBoltTrong();
-    }
-
-    // Getters
-    public bool DaDayBolt()
-    {
-        var postCreateBolts = GetPostCreateBolts();
-        var currentCount = levelController?.GetAllBolts()?.Count ?? 0;
-        var maxPossible = postCreateBolts?.Count ?? maxBolts;
-        return currentCount >= maxPossible || currentCount >= maxBolts;
-    }
-
-    public int SoBoltHienTai() => levelController?.GetAllBolts()?.Count ?? 0;
 }
