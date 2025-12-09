@@ -23,21 +23,17 @@ public class ScrewBase : MonoBehaviour
         }
     }
 
-    // ✅ FIX: Nâng screw lên độ cao đồng nhất và mượt mà
     public void LiftUp(float upOffset, float duration, System.Action onComplete = null)
     {
         if (originalPosition == Vector3.zero)
             originalPosition = transform.position;
 
-        // Kill tween cũ để tránh conflict
         transform.DOKill();
 
-        // ✅ Tính độ cao đồng nhất dựa trên bolt parent
         Vector3 uniformPos = CalculateUniformLiftPosition(upOffset);
 
-        // ✅ Animation mượt mà với ease curve
         transform.DOMove(uniformPos, duration)
-            .SetEase(Ease.OutBack, 1.2f) // Ease mượt mà với hiệu ứng bounce nhẹ
+            .SetEase(Ease.OutBack, 1.2f)
             .OnComplete(() =>
             {
                 isLifted = true;
@@ -45,34 +41,12 @@ public class ScrewBase : MonoBehaviour
             });
     }
 
-    // ✅ NEW: Tính vị trí nâng lên đồng nhất
-    private Vector3 CalculateUniformLiftPosition(float upOffset)
-    {
-        Vector3 uniformPos = originalPosition;
-
-        // Tìm bolt parent để làm reference
-        BotlBase parentBolt = GetComponentInParent<BotlBase>();
-        if (parentBolt != null)
-        {
-            // Sử dụng vị trí bolt + offset cố định để tất cả screw có cùng độ cao
-            float boltBaseY = parentBolt.transform.position.y;
-            uniformPos.y = boltBaseY + upOffset;
-        }
-        else
-        {
-            // Fallback: dùng world Y + offset
-            uniformPos.y = originalPosition.y + upOffset;
-        }
-
-        return uniformPos;
-    }
-
     public void MoveTo(Vector3 targetPosition, float duration, System.Action onComplete = null)
     {
         transform.DOKill();
 
         transform.DOMove(targetPosition, duration)
-            .SetEase(Ease.InOutQuart) // Ease mượt mà cho di chuyển
+            .SetEase(Ease.InOutQuart)
             .OnComplete(() =>
             {
                 originalPosition = targetPosition;
@@ -86,12 +60,30 @@ public class ScrewBase : MonoBehaviour
         transform.DOKill();
 
         transform.DOMove(originalPosition, duration)
-            .SetEase(Ease.OutBounce) // Ease với bounce nhẹ khi thả xuống
+            .SetEase(Ease.OutBounce)
             .OnComplete(() =>
             {
                 isLifted = false;
                 onComplete?.Invoke();
             });
+    }
+
+    private Vector3 CalculateUniformLiftPosition(float upOffset)
+    {
+        Vector3 uniformPos = originalPosition;
+
+        BotlBase parentBolt = GetComponentInParent<BotlBase>();
+        if (parentBolt != null)
+        {
+            float boltBaseY = parentBolt.transform.position.y;
+            uniformPos.y = boltBaseY + upOffset;
+        }
+        else
+        {
+            uniformPos.y = originalPosition.y + upOffset;
+        }
+
+        return uniformPos;
     }
 
     Material GetMaterialById(int id)

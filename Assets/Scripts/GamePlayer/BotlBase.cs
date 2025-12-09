@@ -17,11 +17,8 @@ public class BotlBase : MonoBehaviour
 
         for (int i = 0; i < postBolts.Count && i < lsId.Count; i++)
         {
-            if (screwPrefab == null) return;
-
             var screw = Instantiate(screwPrefab);
             screw.transform.position = postBolts[i].transform.position;
-            screw.transform.SetParent(this.transform);
             screw.Init(lsId[i]);
             screwBases.Add(screw);
         }
@@ -33,16 +30,11 @@ public class BotlBase : MonoBehaviour
         return screwBases[screwBases.Count - 1];
     }
 
-    // ✅ FIX: Sửa logic IsFull để không chặn di chuyển khi vẫn còn slot
     public bool IsFull()
     {
         if (screwBases == null) return false;
-
-        // Chỉ đầy khi đạt tối đa 5 screw
         return screwBases.Count >= 5;
     }
-
-    // ✅ NEW: Thêm method kiểm tra hoàn thành riêng
     public bool IsComplete()
     {
         if (screwBases == null || screwBases.Count < 3) return false;

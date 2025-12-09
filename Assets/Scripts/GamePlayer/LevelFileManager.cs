@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 public static class LevelFileManager
 {
@@ -8,7 +7,7 @@ public static class LevelFileManager
     private const string CURRENT_KEY = "CurrentLevel";
     private const string LIST_KEY = "LevelList";
 
-    // Current Level Management
+    // GET/SET CURRENT LEVEL
     public static int GetCurrentLevelId() => PlayerPrefs.GetInt(CURRENT_KEY, 1);
 
     public static void SetCurrentLevelId(int levelId)
@@ -17,9 +16,12 @@ public static class LevelFileManager
         PlayerPrefs.Save();
     }
 
+    // ✅ THÊM: GO TO NEXT LEVEL
     public static int GoToNextLevel()
     {
-        int next = GetCurrentLevelId() + 1;
+        int current = GetCurrentLevelId();
+        int next = current + 1;
+
         if (LevelExists(next))
         {
             SetCurrentLevelId(next);
@@ -27,14 +29,16 @@ public static class LevelFileManager
         }
         else
         {
-            SetCurrentLevelId(1); // Reset về level 1
+            SetCurrentLevelId(1);
             return 1;
         }
     }
 
-    // Save/Load Level
+    // SAVE LEVEL - Đơn giản
     public static bool SaveLevel(int levelId, string levelName, LevelData levelData)
     {
+        if (levelData == null) return false;
+
         var saveData = new SavedLevel
         {
             levelId = levelId,
@@ -48,10 +52,11 @@ public static class LevelFileManager
         AddToLevelList(levelId);
         PlayerPrefs.Save();
 
-        Debug.Log($"💾 Saved Level {levelId}: {levelName}");
+        Debug.Log($"💾 Lưu Level {levelId}: {levelName}");
         return true;
     }
 
+    // LOAD LEVEL - Đơn giản
     public static SavedLevel LoadLevel(int levelId)
     {
         string key = LEVEL_KEY + levelId;
@@ -63,7 +68,24 @@ public static class LevelFileManager
         return null;
     }
 
-    // Level List Management
+    // DELETE ALL - Đơn giản
+    public static void ClearAllLevels()
+    {
+        List<int> levels = GetAllLevelIds();
+
+        foreach (int id in levels)
+        {
+            PlayerPrefs.DeleteKey(LEVEL_KEY + id);
+        }
+
+        PlayerPrefs.DeleteKey(LIST_KEY);
+        PlayerPrefs.DeleteKey(CURRENT_KEY);
+        PlayerPrefs.Save();
+
+        Debug.Log($"🗑️ Đã xóa tất cả {levels.Count} level");
+    }
+
+    // GET ALL LEVEL IDS - Cho Prev/Next
     public static List<int> GetAllLevelIds()
     {
         string listJson = PlayerPrefs.GetString(LIST_KEY, "");
@@ -82,6 +104,13 @@ public static class LevelFileManager
         return result;
     }
 
+    // LEVEL EXISTS - Cho navigation
+    public static bool LevelExists(int levelId)
+    {
+        return PlayerPrefs.HasKey(LEVEL_KEY + levelId);
+    }
+
+    // ADD TO LIST - Helper
     private static void AddToLevelList(int levelId)
     {
         List<int> levels = GetAllLevelIds();
@@ -92,64 +121,5 @@ public static class LevelFileManager
             string listString = string.Join(",", levels);
             PlayerPrefs.SetString(LIST_KEY, listString);
         }
-    }
-
-    // Utility Methods
-    public static bool LevelExists(int levelId)
-    {
-        return PlayerPrefs.HasKey(LEVEL_KEY + levelId);
-    }
-
-    public static int GetNextAvailableLevelId()
-    {
-        List<int> existing = GetAllLevelIds();
-        if (existing.Count == 0) return 1;
-
-        for (int i = 1; i <= existing.Max() + 1; i++)
-        {
-            if (!existing.Contains(i)) return i;
-        }
-        return existing.Max() + 1;
-    }
-
-    public static void ListAllLevels()
-    {
-        List<int> levels = GetAllLevelIds();
-        int current = GetCurrentLevelId();
-
-        Debug.Log($"📋 Found {levels.Count} levels (Current: {current}):");
-        foreach (int id in levels)
-        {
-            var level = LoadLevel(id);
-            if (level != null)
-            {
-                string marker = (id == current) ? " ← CURRENT" : "";
-                Debug.Log($"  • Level {id}: {level.levelName}{marker}");
-            }
-        }
-    }
-
-    // Debug Methods
-    public static void DeleteLevel(int levelId)
-    {
-        PlayerPrefs.DeleteKey(LEVEL_KEY + levelId);
-        List<int> levels = GetAllLevelIds();
-        levels.Remove(levelId);
-        string listString = string.Join(",", levels);
-        PlayerPrefs.SetString(LIST_KEY, listString);
-        PlayerPrefs.Save();
-    }
-
-    public static void ClearAllLevels()
-    {
-        List<int> levels = GetAllLevelIds();
-        foreach (int id in levels)
-        {
-            PlayerPrefs.DeleteKey(LEVEL_KEY + id);
-        }
-        PlayerPrefs.DeleteKey(LIST_KEY);
-        PlayerPrefs.DeleteKey(CURRENT_KEY);
-        PlayerPrefs.Save();
-        Debug.Log("🧹 Cleared all levels");
     }
 }

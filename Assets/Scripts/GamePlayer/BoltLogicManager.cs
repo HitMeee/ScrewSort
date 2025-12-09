@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class BoltLogicManager : MonoBehaviour
 {
-    [Header("Settings")]
     public List<BotlBase> allBolts;
     public float moveDuration = 0.3f;
     public float uniformLiftHeight = 1.5f;

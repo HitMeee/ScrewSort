@@ -12,208 +12,195 @@ public class LevelEditorOdin : MonoBehaviour
     [HorizontalGroup("Info")]
     [SerializeField] private string levelName = "New Level";
 
-    [HorizontalGroup("Info")]
-    [Button("Next ID")]
-    private void GetNextId()
-    {
-        currentLevelId = LevelFileManager.GetNextAvailableLevelId();
-        levelName = $"Level {currentLevelId}";
-    }
-
     [Space]
     [TableList(AlwaysExpanded = true)]
     [SerializeField] private List<BoltSetup> boltSetups = new List<BoltSetup>();
 
+    // ADD BOLT
     [HorizontalGroup("Actions")]
     [Button("Add Bolt"), GUIColor(0.6f, 1f, 0.6f)]
-    public void AddBolt() => boltSetups.Add(new BoltSetup());
+    public void AddBolt()
+    {
+        boltSetups.Add(new BoltSetup());
+        Debug.Log($"➕ Thêm bolt mới. Tổng: {boltSetups.Count}");
+    }
 
+    // REMOVE LAST
     [HorizontalGroup("Actions")]
     [Button("Remove Last"), GUIColor(1f, 0.6f, 0.6f)]
-    public void RemoveBolt() { if (boltSetups.Count > 0) boltSetups.RemoveAt(boltSetups.Count - 1); }
-
-    [HorizontalGroup("Actions")]
-    [Button("Random All"), GUIColor(1f, 1f, 0.6f)]
-    public void RandomizeAll()
+    public void RemoveLast()
     {
-        foreach (var bolt in boltSetups)
-            for (int i = 0; i < bolt.screwIds.Count; i++)
-                bolt.screwIds[i] = Random.Range(1, 6);
-    }
-
-    [HorizontalGroup("Templates")]
-    [Button("Easy"), GUIColor(0.6f, 1f, 0.6f)]
-    public void CreateEasy()
-    {
-        boltSetups.Clear();
-        for (int i = 0; i < 3; i++)
-            boltSetups.Add(new BoltSetup { screwIds = new List<int> { 1, 1, 2, 2, 3 } });
-        levelName = $"Easy Level {currentLevelId}";
-    }
-
-    [HorizontalGroup("Templates")]
-    [Button("Hard"), GUIColor(1f, 0.6f, 0.6f)]
-    public void CreateHard()
-    {
-        boltSetups.Clear();
-        for (int i = 0; i < 5; i++)
+        if (boltSetups.Count > 0)
         {
-            var setup = new BoltSetup();
-            for (int j = 0; j < 5; j++) setup.screwIds.Add(Random.Range(1, 6));
-            boltSetups.Add(setup);
+            boltSetups.RemoveAt(boltSetups.Count - 1);
+            Debug.Log($"➖ Xóa bolt cuối. Còn lại: {boltSetups.Count}");
         }
-        levelName = $"Hard Level {currentLevelId}";
     }
 
+    // SAVE LEVEL
     [HorizontalGroup("File")]
     [Button("Save Level", ButtonSizes.Large), GUIColor(0.2f, 0.8f, 0.2f)]
     public void SaveLevel()
     {
-        if (boltSetups.Count == 0)
-        {
-            Debug.LogWarning("⚠️ No bolt setups to save!");
-            return;
-        }
+        if (boltSetups.Count == 0) return;
 
-        var gameData = new LevelData { lsDataBolt = new List<DataBolt>() };
-        for (int i = 0; i < boltSetups.Count; i++)
-        {
-            gameData.lsDataBolt.Add(new DataBolt
-            {
-                idBolt = i + 1,
-                lsIdScrew = new List<int>(boltSetups[i].screwIds)
-            });
-        }
-
-        bool success = LevelFileManager.SaveLevel(currentLevelId, levelName, gameData);
+        var levelData = ConvertToLevelData();
+        bool success = LevelFileManager.SaveLevel(currentLevelId, levelName, levelData);
 
         if (success)
         {
-            Debug.Log($"✅ Successfully saved Level {currentLevelId}: {levelName}");
+            Debug.Log($"💾 Đã lưu Level {currentLevelId}: {levelName}");
         }
     }
 
+    // LOAD LEVEL - CHỈ load vào editor và game
     [HorizontalGroup("File")]
-    [Button("Load & Play", ButtonSizes.Large), GUIColor(0.2f, 0.6f, 0.8f)]
-    public void LoadAndPlay()
+    [Button("Load Level", ButtonSizes.Large), GUIColor(0.2f, 0.6f, 0.8f)]
+    public void LoadLevel()
     {
         var savedLevel = LevelFileManager.LoadLevel(currentLevelId);
+
         if (savedLevel != null)
         {
-            // Load into editor
+            // Load vào editor
             levelName = savedLevel.levelName;
-            boltSetups.Clear();
-            foreach (var bolt in savedLevel.levelData.lsDataBolt)
-                boltSetups.Add(new BoltSetup { screwIds = new List<int>(bolt.lsIdScrew) });
+            ConvertFromLevelData(savedLevel.levelData);
 
-            Debug.Log($"📂 Loaded Level {currentLevelId}: {levelName} into editor");
+            // ✅ Apply vào game khi load
+            ApplyToGame();
 
-            // Load into game and set as current level
-            var gameScene = FindObjectOfType<GameScene>();
-            if (gameScene != null)
+            Debug.Log($"📂 Đã load Level {currentLevelId}: {levelName}");
+        }
+        else
+        {
+            Debug.LogWarning($"⚠️ Không tìm thấy Level {currentLevelId}!");
+        }
+    }
+
+    // DELETE ALL
+    [Button("Delete All", ButtonSizes.Large), GUIColor(1f, 0.4f, 0.4f)]
+    public void DeleteAll()
+    {
+        if (levelController == null)
+            levelController = FindObjectOfType<LevelController>();
+
+        if (levelController != null)
+        {
+            levelController.ClearScene();
+            Debug.Log("🗑️ Đã xóa tất cả khỏi scene!");
+        }
+    }
+
+    // ✅ SỬA: PREV - CHỈ đổi ID, không tự động load
+    [HorizontalGroup("Navigation")]
+    [Button("Prev"), GUIColor(0.8f, 0.8f, 0.6f)]
+    public void PrevLevel()
+    {
+        var allIds = LevelFileManager.GetAllLevelIds();
+
+        if (allIds.Count > 0)
+        {
+            int currentIndex = allIds.IndexOf(currentLevelId);
+
+            if (currentIndex > 0)
             {
-                gameScene.LoadLevelById(currentLevelId);
-                Debug.Log($"🎮 Set Level {currentLevelId} as current game level");
+                currentLevelId = allIds[currentIndex - 1];
+                Debug.Log($"⬅️ Chuyển ID về Level {currentLevelId} (chưa load)");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ Đã ở level đầu tiên!");
             }
         }
         else
         {
-            Debug.LogWarning($"⚠️ Level {currentLevelId} not found!");
+            Debug.LogWarning("⚠️ Không có level nào!");
         }
     }
 
-    [Button("Apply To Game", ButtonSizes.Large), GUIColor(0.2f, 0.8f, 0.2f)]
-    public void ApplyToGame()
+    // ✅ SỬA: NEXT - CHỈ đổi ID, không tự động load
+    [HorizontalGroup("Navigation")]
+    [Button("Next"), GUIColor(0.8f, 0.8f, 0.6f)]
+    public void NextLevel()
     {
-        if (levelController == null) levelController = FindObjectOfType<LevelController>();
+        var allIds = LevelFileManager.GetAllLevelIds();
 
-        var gameData = new LevelData { lsDataBolt = new List<DataBolt>() };
+        if (allIds.Count > 0)
+        {
+            int currentIndex = allIds.IndexOf(currentLevelId);
+
+            if (currentIndex >= 0 && currentIndex < allIds.Count - 1)
+            {
+                currentLevelId = allIds[currentIndex + 1];
+                Debug.Log($"➡️ Chuyển ID đến Level {currentLevelId} (chưa load)");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ Đã ở level cuối cùng!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Không có level nào!");
+        }
+    }
+
+    // HELPERS
+    private LevelData ConvertToLevelData()
+    {
+        var levelData = new LevelData();
+        levelData.lsDataBolt = new List<DataBolt>();
+
         for (int i = 0; i < boltSetups.Count; i++)
         {
-            gameData.lsDataBolt.Add(new DataBolt
+            levelData.lsDataBolt.Add(new DataBolt
             {
                 idBolt = i + 1,
                 lsIdScrew = new List<int>(boltSetups[i].screwIds)
             });
         }
 
-        var field = typeof(LevelController).GetField("levelDatas",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        field?.SetValue(levelController, gameData);
-
-        levelController.ForceReinit();
-
-        // Set as current level for auto progression
-        LevelFileManager.SetCurrentLevelId(currentLevelId);
-
-        Debug.Log($"✅ Applied Level {currentLevelId}: {levelName} to game");
+        return levelData;
     }
 
-    [HorizontalGroup("File")]
-    [Button("Delete All", ButtonSizes.Large), GUIColor(1f, 0.4f, 0.4f)]
-    public void DeleteAll()
+    private void ConvertFromLevelData(LevelData levelData)
     {
-        if (levelController == null) levelController = FindObjectOfType<LevelController>();
+        boltSetups.Clear();
+
+        foreach (var dataBolt in levelData.lsDataBolt)
+        {
+            boltSetups.Add(new BoltSetup { screwIds = new List<int>(dataBolt.lsIdScrew) });
+        }
+    }
+
+    private void ApplyToGame()
+    {
+        if (levelController == null)
+            levelController = FindObjectOfType<LevelController>();
 
         if (levelController != null)
         {
-            var clearMethod = typeof(LevelController).GetMethod("ClearBolts",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            clearMethod?.Invoke(levelController, null);
-
-            var isInitField = typeof(LevelController).GetField("isInitialized",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            isInitField?.SetValue(levelController, false);
-
-            Debug.Log("🗑️ Cleared all bolts from scene!");
+            var levelData = ConvertToLevelData();
+            levelController.SetLevelData(levelData);
+            levelController.ForceReinit();
+            LevelFileManager.SetCurrentLevelId(currentLevelId);
         }
     }
-
-    [HorizontalGroup("Nav")]
-    [Button("Prev")]
-    public void PreviousLevel()
-    {
-        var allIds = LevelFileManager.GetAllLevelIds();
-        if (allIds.Count > 0)
-        {
-            int index = allIds.IndexOf(currentLevelId);
-            if (index > 0)
-            {
-                currentLevelId = allIds[index - 1];
-                LoadAndPlay();
-            }
-        }
-    }
-
-    [HorizontalGroup("Nav")]
-    [Button("Next")]
-    public void NextLevel()
-    {
-        var allIds = LevelFileManager.GetAllLevelIds();
-        if (allIds.Count > 0)
-        {
-            int index = allIds.IndexOf(currentLevelId);
-            if (index >= 0 && index < allIds.Count - 1)
-            {
-                currentLevelId = allIds[index + 1];
-                LoadAndPlay();
-            }
-        }
-    }
-
-    [HorizontalGroup("Nav")]
-    [Button("List All")]
-    public void ListAllLevels() => LevelFileManager.ListAllLevels();
 
     void Start()
     {
-        if (levelController == null) levelController = FindObjectOfType<LevelController>();
+        if (levelController == null)
+            levelController = FindObjectOfType<LevelController>();
+
         if (boltSetups.Count == 0)
         {
             for (int i = 0; i < 3; i++)
+            {
                 boltSetups.Add(new BoltSetup { screwIds = new List<int> { 1, 2, 1, 2, 3 } });
+            }
         }
     }
+
 
     [System.Serializable]
     public class BoltSetup
@@ -221,11 +208,13 @@ public class LevelEditorOdin : MonoBehaviour
         [ListDrawerSettings(ShowIndexLabels = true)]
         public List<int> screwIds = new List<int> { 1, 1, 1, 1, 1 };
 
-        [Button("🎲")]
-        private void RandomizeThis()
+        [Button("🎲 Random")]
+        private void RandomThis()
         {
             for (int i = 0; i < screwIds.Count; i++)
+            {
                 screwIds[i] = Random.Range(1, 6);
+            }
         }
     }
 }
