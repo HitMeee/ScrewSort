@@ -6,7 +6,9 @@ public class GameScene : MonoBehaviour
 {
     [Header("🎮 Game Settings")]
     [SerializeField] private float delayBeforeNext = 2f;
-    [SerializeField] private bool autoNextLevel = true;
+    [SerializeField] private bool autoNextLevel = false;
+    [SerializeField] private UIManager uiManager;
+
 
     private bool levelCompleted = false;
     private LevelController levelController;
@@ -69,7 +71,12 @@ public class GameScene : MonoBehaviour
         levelCompleted = true;
         Debug.Log("🏆 Level Complete!");
 
-        if (autoNextLevel)
+        // ✅ THÊM: Hiển thị UI thay vì auto next
+        if (uiManager != null)
+        {
+            uiManager.ShowComplete();
+        }
+        else if (autoNextLevel)
         {
             StartCoroutine(DelayedNext());
         }
@@ -170,6 +177,7 @@ public class GameScene : MonoBehaviour
             CreateDefaultLevel(levelId);
         }
     }
+
 
     // UI Button Methods
     public void OnReplayClicked() => ReloadCurrentLevel();
