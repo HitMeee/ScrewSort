@@ -322,14 +322,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelController: {fileID: 1943911444}
-  currentLevelId: 1
-  levelName: Level 1
+  currentLevelId: 6
+  levelName: Level 6
   boltSetups:
-  - screwIds: 01000000020000000200000001000000
-  - screwIds: 0100000002000000020000000200000001000000
-  - screwIds: 01000000020000000200000002000000
-  - screwIds: 0200000002000000
-  - screwIds: 
+  - screwIds: 0100000002000000010000000200000003000000
 --- !u!1 &185242789
 GameObject:
   m_ObjectHideFlags: 0
@@ -2702,27 +2698,11 @@ MonoBehaviour:
   - {fileID: 1940439840}
   botlBase: {fileID: 7226171028788874725, guid: 0de79a075add6474780d2d0b7819bfb1, type: 3}
   levelDatas:
-    lsDataBolt:
-    - idBolt: 1
-      lsIdScrew: 01000000020000000200000001000000
-    - idBolt: 2
-      lsIdScrew: 0100000002000000020000000200000001000000
-    - idBolt: 3
-      lsIdScrew: 01000000020000000200000002000000
-    - idBolt: 4
-      lsIdScrew: 0200000002000000
-    - idBolt: 5
-      lsIdScrew: 
-    - idBolt: 6
-      lsIdScrew: 0100000001000000010000000100000001000000
-    - idBolt: 7
-      lsIdScrew: 0100000001000000010000000100000001000000
-    - idBolt: 8
-      lsIdScrew: 0100000001000000010000000100000001000000
-    - idBolt: 9
-      lsIdScrew: 0100000001000000010000000100000001000000
+    lsDataBolt: []
   addBolt: {fileID: 1304203639}
   backStep: {fileID: 345904663}
+  gameCompleted: 0
+  isInitialized: 0
 --- !u!1 &2047177270
 GameObject:
   m_ObjectHideFlags: 0

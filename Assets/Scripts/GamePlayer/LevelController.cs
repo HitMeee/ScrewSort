@@ -6,15 +6,15 @@ public class LevelController : MonoBehaviour
     [Header("🎮 Thiết lập Level")]
     public List<Transform> PostCreateBolts;
     [SerializeField] BotlBase botlBase;
-    [SerializeField] LevelData levelDatas;
+    public LevelData levelDatas; // ✅ ĐỔI THÀNH PUBLIC để LevelFileManager truy cập
 
     [Header("🛠️ Công cụ hỗ trợ")]
     [SerializeField] private AddBolt addBolt;
     [SerializeField] private BackStep backStep;
 
     private List<BotlBase> botlBases = new List<BotlBase>();
-    private bool gameCompleted = false;
-    private bool isInitialized = false;
+    public bool gameCompleted = false; // ✅ ĐỔI THÀNH PUBLIC để LevelFileManager truy cập
+    public bool isInitialized = false; // ✅ ĐỔI THÀNH PUBLIC để LevelFileManager truy cập
 
     void Update()
     {
@@ -155,23 +155,6 @@ public class LevelController : MonoBehaviour
     {
         try { return LevelFileManager.GetCurrentLevelId(); }
         catch { return 1; }
-    }
-
-    // ✅ THÊM: SET LEVEL DATA
-    public void SetLevelData(LevelData newLevelData)
-    {
-        levelDatas = newLevelData;
-    }
-
-    // ✅ THÊM: CLEAR SCENE - Xóa tất cả bolt và screw
-    public void ClearScene()
-    {
-        isInitialized = false;
-        gameCompleted = false;
-        ClearBolts(); // ← Đã được sửa để xóa cả screws
-        levelDatas = null;
-        backStep?.ClearHistory();
-        Debug.Log("🧹 Scene đã được xóa hoàn toàn");
     }
 }
 

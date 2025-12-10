@@ -14,7 +14,7 @@ public class GameScene : MonoBehaviour
     void Start()
     {
         Init();
-        LoadFromLevel1(); // Always start from Level 1
+        LoadCurrentLevelFromPrefs(); // ✅ SỬA: Load từ PlayerPrefs thay vì cứng Level 1
     }
 
     public void Init()
@@ -24,7 +24,25 @@ public class GameScene : MonoBehaviour
         Debug.Log("🎮 GameScene initialized");
     }
 
-    // Always load from Level 1 on game start
+    // ✅ THÊM: Load level từ PlayerPrefs
+    private void LoadCurrentLevelFromPrefs()
+    {
+        int currentLevelId = LevelFileManager.GetCurrentLevelId(); // Lấy từ PlayerPrefs
+        var level = LevelFileManager.LoadLevel(currentLevelId);
+
+        if (level != null)
+        {
+            Debug.Log($"🎯 Loading Level từ PlayerPrefs: {currentLevelId} - {level.levelName}");
+            ApplyLevel(level);
+        }
+        else
+        {
+            Debug.Log($"⚠️ Level {currentLevelId} không tồn tại, tạo level mặc định");
+            CreateDefaultLevel(currentLevelId);
+        }
+    }
+
+    // ✅ GIỮ NGUYÊN: Phương thức này để reset về Level 1 khi cần
     private void LoadFromLevel1()
     {
         // Reset to Level 1 when game starts
@@ -82,6 +100,7 @@ public class GameScene : MonoBehaviour
         }
     }
 
+    // ✅ FIX: Sửa ApplyLevel - không cần reflection vì levelDatas đã là public
     private void ApplyLevel(SavedLevel level)
     {
         if (levelController == null)
@@ -89,15 +108,20 @@ public class GameScene : MonoBehaviour
 
         if (levelController != null)
         {
-            // Set level data using reflection
-            var dataField = typeof(LevelController).GetField("levelDatas",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            dataField?.SetValue(levelController, level.levelData);
+            // ✅ SỬA: Trực tiếp gán vì levelDatas là public
+            levelController.levelDatas = level.levelData;
+
+            // ✅ THÊM: Debug để kiểm tra
+            Debug.Log($"🔧 Set levelDatas với {level.levelData?.lsDataBolt?.Count ?? 0} bolts");
 
             levelController.ForceReinit();
             levelCompleted = false;
 
             Debug.Log($"✅ Applied Level {level.levelId}: {level.levelName}");
+        }
+        else
+        {
+            Debug.LogError("❌ Không tìm thấy LevelController!");
         }
     }
 
@@ -152,7 +176,7 @@ public class GameScene : MonoBehaviour
     public void OnNextClicked() => LoadNextLevel();
     public void OnMenuClicked() => SceneManager.LoadScene(0);
 
-    // Restart from Level 1
+    // ✅ SỬA: Restart from Level 1
     public void RestartFromLevel1()
     {
         Debug.Log("🔄 Restarting from Level 1");
