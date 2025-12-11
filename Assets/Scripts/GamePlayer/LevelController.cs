@@ -36,8 +36,20 @@ public class LevelController : MonoBehaviour
         GamePlayerController.Instance?.gameScene?.OnLevelComplete();
     }
 
-    public void ButtonThemBolt() => addBolt?.ButtonAddBolt();
-    public void ButtonQuayLai() => backStep?.ButtonGoBack();
+    // Tìm 2 method này và comment lại:
+    public void ButtonThemBolt()
+    {
+        // ✅ COMMENT: Để ToolManager xử lý
+        // addBolt?.ButtonAddBolt();
+        Debug.Log("⚠️ ButtonThemBolt deprecated - Use ToolManager instead");
+    }
+
+    public void ButtonQuayLai()
+    {
+        // ✅ COMMENT: Để ToolManager xử lý  
+        // backStep?.ButtonGoBack();
+        Debug.Log("⚠️ ButtonQuayLai deprecated - Use ToolManager instead");
+    }
 
     public void Init()
     {

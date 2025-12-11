@@ -71,15 +71,22 @@ public class GameScene : MonoBehaviour
         levelCompleted = true;
         Debug.Log("🏆 Level Complete!");
 
-        // ✅ THÊM: Hiển thị UI thay vì auto next
+        // ✅ THÊM: Đợi 2 giây rồi mới hiện UI
         if (uiManager != null)
         {
-            uiManager.ShowComplete();
+            StartCoroutine(DelayedShowUI());
         }
         else if (autoNextLevel)
         {
             StartCoroutine(DelayedNext());
         }
+    }
+
+    // ✅ THÊM: Coroutine mới để delay hiện UI
+    private IEnumerator DelayedShowUI()
+    {
+        yield return new WaitForSeconds(1f);
+        uiManager.ShowComplete();
     }
 
     private IEnumerator DelayedNext()

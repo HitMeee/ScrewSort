@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using TMPro;
 
 public class CoinManager : MonoBehaviour
@@ -25,7 +25,8 @@ public class CoinManager : MonoBehaviour
 
     public void AddCoins(int amount)
     {
-        coins += amount;
+        coins += amount; // Có thể âm để trừ xu
+        if (coins < 0) coins = 0; // Không cho âm
         SaveCoins();
         UpdateUI();
     }
@@ -38,7 +39,7 @@ public class CoinManager : MonoBehaviour
     private void UpdateUI()
     {
         if (coinText != null)
-            coinText.text = "Xu: " + coins;
+            coinText.text = "" + coins;
     }
 
     public int GetCoins() => coins;
