@@ -11,6 +11,10 @@ public class ScrewBase : MonoBehaviour
     [HideInInspector] public bool isLifted = false;
     [HideInInspector] public Vector3 originalPosition;
 
+    // ✅ THÊM: Độ cao nâng đồng nhất cho tất cả screws
+    [Header("Lift Settings")]
+    public static float UNIFORM_LIFT_HEIGHT = 2.0f; // Độ cao cố định từ mặt đất
+
     public void Init(int id)
     {
         this.id = id;
@@ -30,6 +34,7 @@ public class ScrewBase : MonoBehaviour
 
         transform.DOKill();
 
+        // ✅ SỬA: Sử dụng độ cao đồng nhất
         Vector3 uniformPos = CalculateUniformLiftPosition(upOffset);
 
         transform.DOMove(uniformPos, duration)
@@ -68,22 +73,24 @@ public class ScrewBase : MonoBehaviour
             });
     }
 
+    // ✅ SỬA: Tính toán độ cao nâng đồng nhất
     private Vector3 CalculateUniformLiftPosition(float upOffset)
     {
         Vector3 uniformPos = originalPosition;
 
-        BotlBase parentBolt = GetComponentInParent<BotlBase>();
-        if (parentBolt != null)
-        {
-            float boltBaseY = parentBolt.transform.position.y;
-            uniformPos.y = boltBaseY + upOffset;
-        }
-        else
-        {
-            uniformPos.y = originalPosition.y + upOffset;
-        }
+        // ✅ CÁCH 1: Sử dụng độ cao cố định từ world origin
+        uniformPos.y = UNIFORM_LIFT_HEIGHT;
+
+        // ✅ CÁCH 2: Hoặc nếu muốn relative với upOffset
+        // uniformPos.y = UNIFORM_LIFT_HEIGHT + upOffset;
 
         return uniformPos;
+    }
+
+    // ✅ THÊM: Phương thức để set độ cao đồng nhất
+    public static void SetUniformLiftHeight(float height)
+    {
+        UNIFORM_LIFT_HEIGHT = height;
     }
 
     Material GetMaterialById(int id)

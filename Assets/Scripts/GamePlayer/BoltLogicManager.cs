@@ -4,11 +4,15 @@ using UnityEngine;
 
 public class BoltLogicManager : MonoBehaviour
 {
-    public List<BotlBase> allBolts;
+    [Header("Settings")]
     public float moveDuration = 0.3f;
     public float uniformLiftHeight = 1.5f;
     public float liftDuration = 0.4f;
 
+    [Header("References")]
+    public List<BotlBase> allBolts;
+
+    // Private state
     private ScrewBase currentLiftedScrew;
     private BotlBase currentSourceBolt;
     private Queue<BotlBase> clickQueue = new Queue<BotlBase>();
@@ -17,23 +21,29 @@ public class BoltLogicManager : MonoBehaviour
 
     public void Init()
     {
-        // Auto-calculate lift height if not set
-        if (uniformLiftHeight <= 0)
-        {
-            uniformLiftHeight = CalculateOptimalLiftHeight();
-        }
+        SetupLiftHeight();
+        SetupBolts();
+        InitializeLockStatus();
+        Debug.Log("🎮 BoltLogicManager initialized");
+    }
 
-        // Get bolts from LevelController if not assigned
+    private void SetupLiftHeight()
+    {
+        if (uniformLiftHeight <= 0)
+            uniformLiftHeight = CalculateOptimalLiftHeight();
+    }
+
+    private void SetupBolts()
+    {
         if (allBolts == null || allBolts.Count == 0)
         {
             var levelController = GamePlayerController.Instance?.gameContaint?.levelController;
-            if (levelController != null)
-            {
-                allBolts = levelController.GetAllBolts();
-            }
+            allBolts = levelController?.GetAllBolts() ?? new List<BotlBase>();
         }
+    }
 
-        // Initialize bolt lock status
+    private void InitializeLockStatus()
+    {
         boltLockStatus.Clear();
         foreach (var bolt in allBolts)
         {
@@ -43,7 +53,7 @@ public class BoltLogicManager : MonoBehaviour
 
     private float CalculateOptimalLiftHeight()
     {
-        float maxPostHeight = 0f;
+        float maxHeight = 0f;
         foreach (var bolt in allBolts)
         {
             if (bolt?.postBolts != null)
@@ -51,181 +61,195 @@ public class BoltLogicManager : MonoBehaviour
                 foreach (var post in bolt.postBolts)
                 {
                     if (post != null)
-                    {
-                        float relativeHeight = post.transform.position.y - bolt.transform.position.y;
-                        if (relativeHeight > maxPostHeight)
-                            maxPostHeight = relativeHeight;
-                    }
+                        maxHeight = Mathf.Max(maxHeight, post.transform.position.y - bolt.transform.position.y);
                 }
             }
         }
-        return maxPostHeight + 0.8f;
+        return maxHeight + 0.8f;
     }
 
-    // Main click handler - adds click to queue
     public void OnBoltClicked(BotlBase clickedBolt)
     {
-        if (clickedBolt == null) return;
+        if (clickedBolt == null || IsBoltLocked(clickedBolt) || clickQueue.Contains(clickedBolt))
+            return;
 
         clickQueue.Enqueue(clickedBolt);
+        Debug.Log($"🎯 Added {clickedBolt.name} to queue. Size: {clickQueue.Count}");
 
         if (!isProcessing)
-        {
             StartCoroutine(ProcessClickQueue());
-        }
     }
 
-    // Process clicks one by one
     private IEnumerator ProcessClickQueue()
     {
         isProcessing = true;
 
         while (clickQueue.Count > 0)
         {
-            var clickedBolt = clickQueue.Dequeue();
-            ProcessSingleClick(clickedBolt);
-            yield return null;
+            var bolt = clickQueue.Dequeue();
+            if (bolt != null && !IsBoltLocked(bolt))
+            {
+                yield return StartCoroutine(ProcessBoltClick(bolt));
+                yield return new WaitForSeconds(0.1f);
+            }
         }
 
         isProcessing = false;
     }
 
-    // Handle single bolt click
-    private void ProcessSingleClick(BotlBase clickedBolt)
+    private IEnumerator ProcessBoltClick(BotlBase clickedBolt)
     {
-        if (IsBoltLocked(clickedBolt)) return;
+        var sourceBolt = currentSourceBolt; // Store for completion check
 
-        if (currentLiftedScrew != null && currentSourceBolt != null)
-        {
-            if (clickedBolt == currentSourceBolt)
-            {
-                // Drop screw back to original position
-                currentLiftedScrew.DropToOriginal(moveDuration, null);
-                ResetCurrentScrew();
-                return;
-            }
-
-            ScrewBase targetTopScrew = clickedBolt.GetTopScrew();
-
-            if (targetTopScrew == null || currentLiftedScrew.id == targetTopScrew.id)
-            {
-                // Move screw to target bolt
-                HandleScrewMovement(clickedBolt);
-            }
-            else
-            {
-                // Different color: drop old, lift new
-                currentLiftedScrew.DropToOriginal(moveDuration, null);
-                ResetCurrentScrew();
-                HandleLiftScrew(clickedBolt);
-            }
-        }
+        if (HasLiftedScrew())
+            yield return StartCoroutine(HandleLiftedScrewClick(clickedBolt));
         else
-        {
-            // First click: lift screw from bolt
-            HandleLiftScrew(clickedBolt);
-        }
+            yield return StartCoroutine(LiftScrewFromBolt(clickedBolt));
+
+        // Check completion after moves
+        if (sourceBolt != null && sourceBolt != clickedBolt)
+            CheckGameCompletion(sourceBolt, clickedBolt);
 
         UpdateBoltLockStatus();
     }
 
-    // Handle screw movement between bolts
-    private void HandleScrewMovement(BotlBase targetBolt)
+    private IEnumerator HandleLiftedScrewClick(BotlBase targetBolt)
+    {
+        // Same bolt - drop back
+        if (targetBolt == currentSourceBolt)
+        {
+            yield return StartCoroutine(DropScrewBack());
+            yield break;
+        }
+
+        var targetTopScrew = targetBolt.GetTopScrew();
+
+        // Can move - same color or empty
+        if (targetTopScrew == null || currentLiftedScrew.id == targetTopScrew.id)
+            yield return StartCoroutine(MoveScrewToBolt(targetBolt));
+        else
+            yield return StartCoroutine(SwapScrews(targetBolt, targetTopScrew));
+    }
+
+    private IEnumerator DropScrewBack()
+    {
+        bool completed = false;
+        currentLiftedScrew.DropToOriginal(moveDuration, () =>
+        {
+            ResetLiftedScrew();
+            completed = true;
+        });
+        yield return new WaitUntil(() => completed);
+    }
+
+    private IEnumerator MoveScrewToBolt(BotlBase targetBolt)
     {
         var sortScrew = GamePlayerController.Instance?.gameContaint?.sortScrew;
         if (sortScrew != null)
         {
             sortScrew.HandleScrewMovement(currentLiftedScrew, currentSourceBolt, targetBolt);
-            ResetCurrentScrew();
+            yield return new WaitForSeconds(moveDuration + 0.1f);
+            ResetLiftedScrew();
         }
     }
 
-    // Lift top screw from bolt
-    private void HandleLiftScrew(BotlBase sourceBolt)
+    private IEnumerator SwapScrews(BotlBase targetBolt, ScrewBase targetTopScrew)
     {
-        if (sourceBolt.screwBases.Count > 0)
+        // Drop current
+        yield return StartCoroutine(DropScrewBack());
+
+        // Lift new
+        currentLiftedScrew = targetTopScrew;
+        currentSourceBolt = targetBolt;
+
+        bool completed = false;
+        targetTopScrew.LiftUp(uniformLiftHeight, liftDuration, () => completed = true);
+        yield return new WaitUntil(() => completed);
+    }
+
+    private IEnumerator LiftScrewFromBolt(BotlBase sourceBolt)
+    {
+        if (sourceBolt?.screwBases?.Count > 0)
         {
-            ScrewBase topScrew = sourceBolt.GetTopScrew();
+            var topScrew = sourceBolt.GetTopScrew();
             if (topScrew != null)
             {
                 currentLiftedScrew = topScrew;
                 currentSourceBolt = sourceBolt;
-                topScrew.LiftUp(uniformLiftHeight, liftDuration, null);
+
+                bool completed = false;
+                topScrew.LiftUp(uniformLiftHeight, liftDuration, () => completed = true);
+                yield return new WaitUntil(() => completed);
             }
         }
     }
 
-    // Check if bolt is locked (completed)
-    private bool IsBoltLocked(BotlBase bolt)
+    private void CheckGameCompletion(BotlBase sourceBolt, BotlBase targetBolt)
     {
-        return boltLockStatus.ContainsKey(bolt) && boltLockStatus[bolt];
+        var boltChecker = GamePlayerController.Instance?.gameContaint?.sortScrew?.checker;
+        boltChecker?.CheckAfterMove(sourceBolt, targetBolt);
+
+        if (IsGameComplete())
+        {
+            Debug.Log("🏆 GAME COMPLETED!");
+            GamePlayerController.Instance?.gameScene?.OnLevelComplete();
+            ForceResetState();
+        }
     }
 
-    // Update bolt lock status based on completion
+    public bool IsGameComplete()
+    {
+        if (allBolts == null || allBolts.Count == 0) return false;
+
+        int completed = 0, total = 0;
+
+        foreach (var bolt in allBolts)
+        {
+            if (bolt?.screwBases?.Count > 0)
+            {
+                total++;
+                if (IsBoltComplete(bolt)) completed++;
+            }
+        }
+
+        return total > 0 && completed == total;
+    }
+
     private void UpdateBoltLockStatus()
     {
         foreach (var bolt in allBolts)
         {
             if (bolt != null)
-            {
                 boltLockStatus[bolt] = IsBoltComplete(bolt);
-            }
         }
     }
 
-    // Check if bolt has 5 screws of same color
     private bool IsBoltComplete(BotlBase bolt)
     {
-        if (bolt?.screwBases == null || bolt.screwBases.Count != 5)
-            return false;
+        if (bolt?.screwBases == null || bolt.screwBases.Count != 5) return false;
 
         int firstId = bolt.screwBases[0].id;
         foreach (var screw in bolt.screwBases)
         {
-            if (screw == null || screw.id != firstId)
-                return false;
+            if (screw?.id != firstId) return false;
         }
         return true;
     }
 
-    // Reset lifted screw state
-    private void ResetCurrentScrew()
+    private bool IsBoltLocked(BotlBase bolt) =>
+        boltLockStatus.ContainsKey(bolt) && boltLockStatus[bolt];
+
+    private void ResetLiftedScrew()
     {
         currentLiftedScrew = null;
         currentSourceBolt = null;
     }
 
-    // Check if all bolts are completed
-    public bool IsGameComplete()
-    {
-        if (allBolts == null || allBolts.Count == 0) return false;
-
-        int completedBolts = 0;
-        int totalBoltsWithScrews = 0;
-
-        foreach (var bolt in allBolts)
-        {
-            if (bolt?.screwBases != null && bolt.screwBases.Count > 0)
-            {
-                totalBoltsWithScrews++;
-                if (IsBoltComplete(bolt))
-                    completedBolts++;
-            }
-        }
-
-        return totalBoltsWithScrews > 0 && completedBolts == totalBoltsWithScrews;
-    }
-
-    // Public utility methods
-    public void SetLiftedScrew(ScrewBase screw, BotlBase sourceBolt)
-    {
-        currentLiftedScrew = screw;
-        currentSourceBolt = sourceBolt;
-    }
-
+    // Public API
     public void ForceResetState()
     {
-        ResetCurrentScrew();
+        StopAllCoroutines();
+        ResetLiftedScrew();
         clickQueue.Clear();
         isProcessing = false;
     }
@@ -233,4 +257,13 @@ public class BoltLogicManager : MonoBehaviour
     public bool HasLiftedScrew() => currentLiftedScrew != null && currentSourceBolt != null;
     public ScrewBase GetCurrentLiftedScrew() => currentLiftedScrew;
     public BotlBase GetCurrentSourceBolt() => currentSourceBolt;
+    public int GetQueueSize() => clickQueue.Count;
+    public bool IsCurrentlyProcessing() => isProcessing;
+    public bool IsCurrentlyAnimating() => isProcessing; // Simplified - same as processing
+
+    public void SetLiftedScrew(ScrewBase screw, BotlBase sourceBolt)
+    {
+        currentLiftedScrew = screw;
+        currentSourceBolt = sourceBolt;
+    }
 }
