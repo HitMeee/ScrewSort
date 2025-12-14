@@ -124,11 +124,34 @@ public class BoltLogicManager : MonoBehaviour
 
         var targetTopScrew = targetBolt.GetTopScrew();
 
-        // Can move - same color or empty
-        if (targetTopScrew == null || currentLiftedScrew.id == targetTopScrew.id)
+        // CASE 1: Target empty - move screws
+        if (targetTopScrew == null)
+        {
+            Debug.Log("🟢 Target empty - moving screws");
             yield return StartCoroutine(MoveScrewToBolt(targetBolt));
+        }
+        // CASE 2: Same color
+        else if (currentLiftedScrew.id == targetTopScrew.id)
+        {
+            // CASE 2A: Target has space - move screws
+            if (targetBolt.SlotsAvailable() > 0)
+            {
+                Debug.Log("🟡 Same color + space available - moving screws");
+                yield return StartCoroutine(MoveScrewToBolt(targetBolt));
+            }
+            // CASE 2B: Target full - swap (drop current + lift target)
+            else
+            {
+                Debug.Log("🔄 Same color + target full - swapping screws");
+                yield return StartCoroutine(SwapScrewsProper(targetBolt, targetTopScrew));
+            }
+        }
+        // CASE 3: Different color - swap (drop current + lift target)
         else
-            yield return StartCoroutine(SwapScrews(targetBolt, targetTopScrew));
+        {
+            Debug.Log("🔴 Different color - swapping screws");
+            yield return StartCoroutine(SwapScrewsProper(targetBolt, targetTopScrew));
+        }
     }
 
     private IEnumerator DropScrewBack()
@@ -153,20 +176,43 @@ public class BoltLogicManager : MonoBehaviour
         }
     }
 
-    private IEnumerator SwapScrews(BotlBase targetBolt, ScrewBase targetTopScrew)
+    private IEnumerator SwapScrewsProper(BotlBase targetBolt, ScrewBase targetTopScrew)
     {
-        // Drop current
-        yield return StartCoroutine(DropScrewBack());
+        Debug.Log($"🔄 Starting proper swap: Drop {currentLiftedScrew.id} from {currentSourceBolt.name}, Lift {targetTopScrew.id} from {targetBolt.name}");
 
-        // Lift new
-        currentLiftedScrew = targetTopScrew;
-        currentSourceBolt = targetBolt;
+        // STEP 1: Drop current screw back to source
+        bool dropCompleted = false;
+        currentLiftedScrew.DropToOriginal(moveDuration, () =>
+        {
+            dropCompleted = true;
+            Debug.Log("✅ Dropped current screw back to source");
+        });
+        yield return new WaitUntil(() => dropCompleted);
 
-        bool completed = false;
-        targetTopScrew.LiftUp(uniformLiftHeight, liftDuration, () => completed = true);
-        yield return new WaitUntil(() => completed);
+        // STEP 2: Reset current state
+        ResetLiftedScrew();
+
+        // STEP 3: Lift target screw
+        if (targetTopScrew != null && targetBolt != null)
+        {
+            currentLiftedScrew = targetTopScrew;
+            currentSourceBolt = targetBolt;
+
+            bool liftCompleted = false;
+            targetTopScrew.LiftUp(uniformLiftHeight, liftDuration, () =>
+            {
+                liftCompleted = true;
+                Debug.Log("✅ Lifted target screw");
+            });
+            yield return new WaitUntil(() => liftCompleted);
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Target screw or bolt is null!");
+        }
     }
 
+    // ✅ SỬA: Chỉ giữ lại 1 method LiftScrewFromBolt
     private IEnumerator LiftScrewFromBolt(BotlBase sourceBolt)
     {
         if (sourceBolt?.screwBases?.Count > 0)
@@ -180,6 +226,7 @@ public class BoltLogicManager : MonoBehaviour
                 bool completed = false;
                 topScrew.LiftUp(uniformLiftHeight, liftDuration, () => completed = true);
                 yield return new WaitUntil(() => completed);
+                Debug.Log($"✅ Lifted screw {topScrew.id} from {sourceBolt.name}");
             }
         }
     }
@@ -192,6 +239,13 @@ public class BoltLogicManager : MonoBehaviour
         if (IsGameComplete())
         {
             Debug.Log("🏆 GAME COMPLETED!");
+
+            // ✅ PHÁT ÂM THANH HOÀN THÀNH LEVEL
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayLevelComplete();
+            }
+
             GamePlayerController.Instance?.gameScene?.OnLevelComplete();
             ForceResetState();
         }
@@ -259,7 +313,7 @@ public class BoltLogicManager : MonoBehaviour
     public BotlBase GetCurrentSourceBolt() => currentSourceBolt;
     public int GetQueueSize() => clickQueue.Count;
     public bool IsCurrentlyProcessing() => isProcessing;
-    public bool IsCurrentlyAnimating() => isProcessing; // Simplified - same as processing
+    public bool IsCurrentlyAnimating() => isProcessing;
 
     public void SetLiftedScrew(ScrewBase screw, BotlBase sourceBolt)
     {

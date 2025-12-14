@@ -9,14 +9,13 @@ public class GameScene : MonoBehaviour
     [SerializeField] private bool autoNextLevel = false;
     [SerializeField] private UIManager uiManager;
 
-
     private bool levelCompleted = false;
     private LevelController levelController;
 
     void Start()
     {
         Init();
-        LoadCurrentLevelFromPrefs(); // ✅ SỬA: Load từ PlayerPrefs thay vì cứng Level 1
+        LoadCurrentLevelFromPrefs();
     }
 
     public void Init()
@@ -26,10 +25,9 @@ public class GameScene : MonoBehaviour
         Debug.Log("🎮 GameScene initialized");
     }
 
-    // ✅ THÊM: Load level từ PlayerPrefs
     private void LoadCurrentLevelFromPrefs()
     {
-        int currentLevelId = LevelFileManager.GetCurrentLevelId(); // Lấy từ PlayerPrefs
+        int currentLevelId = LevelFileManager.GetCurrentLevelId();
         var level = LevelFileManager.LoadLevel(currentLevelId);
 
         if (level != null)
@@ -44,12 +42,9 @@ public class GameScene : MonoBehaviour
         }
     }
 
-    // ✅ GIỮ NGUYÊN: Phương thức này để reset về Level 1 khi cần
     private void LoadFromLevel1()
     {
-        // Reset to Level 1 when game starts
         LevelFileManager.SetCurrentLevelId(1);
-
         var level = LevelFileManager.LoadLevel(1);
 
         if (level != null)
@@ -64,6 +59,7 @@ public class GameScene : MonoBehaviour
         }
     }
 
+    // ✅ CHỈ GIỮ LẠI 1 METHOD OnLevelComplete()
     public void OnLevelComplete()
     {
         if (levelCompleted) return;
@@ -71,7 +67,13 @@ public class GameScene : MonoBehaviour
         levelCompleted = true;
         Debug.Log("🏆 Level Complete!");
 
-        // ✅ THÊM: Đợi 2 giây rồi mới hiện UI
+        // ✅ PHÁT ÂM THANH HOÀN THÀNH LEVEL
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayLevelComplete();
+        }
+
+        // ✅ Đợi 1 giây rồi mới hiện UI
         if (uiManager != null)
         {
             StartCoroutine(DelayedShowUI());
@@ -82,10 +84,9 @@ public class GameScene : MonoBehaviour
         }
     }
 
-    // ✅ THÊM: Coroutine mới để delay hiện UI
     private IEnumerator DelayedShowUI()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         uiManager.ShowComplete();
     }
 
@@ -96,7 +97,6 @@ public class GameScene : MonoBehaviour
         LoadNextLevel();
     }
 
-    // Auto load next level when completed
     public void LoadNextLevel()
     {
         int nextId = LevelFileManager.GoToNextLevel();
@@ -114,7 +114,6 @@ public class GameScene : MonoBehaviour
         }
     }
 
-    // ✅ FIX: Sửa ApplyLevel - không cần reflection vì levelDatas đã là public
     private void ApplyLevel(SavedLevel level)
     {
         if (levelController == null)
@@ -122,15 +121,10 @@ public class GameScene : MonoBehaviour
 
         if (levelController != null)
         {
-            // ✅ SỬA: Trực tiếp gán vì levelDatas là public
             levelController.levelDatas = level.levelData;
-
-            // ✅ THÊM: Debug để kiểm tra
             Debug.Log($"🔧 Set levelDatas với {level.levelData?.lsDataBolt?.Count ?? 0} bolts");
-
             levelController.ForceReinit();
             levelCompleted = false;
-
             Debug.Log($"✅ Applied Level {level.levelId}: {level.levelName}");
         }
         else
@@ -143,7 +137,6 @@ public class GameScene : MonoBehaviour
     {
         var data = new LevelData();
 
-        // Create 3 default bolts
         for (int i = 0; i < 3; i++)
         {
             data.lsDataBolt.Add(new DataBolt
@@ -161,13 +154,10 @@ public class GameScene : MonoBehaviour
         };
 
         ApplyLevel(level);
-
-        // Save default level to PlayerPrefs for future use
         LevelFileManager.SaveLevel(levelId, level.levelName, level.levelData);
         Debug.Log($"💾 Auto-saved default Level {levelId}");
     }
 
-    // Manual level loading from Level Editor
     public void LoadLevelById(int levelId)
     {
         LevelFileManager.SetCurrentLevelId(levelId);
@@ -185,13 +175,11 @@ public class GameScene : MonoBehaviour
         }
     }
 
-
     // UI Button Methods
     public void OnReplayClicked() => ReloadCurrentLevel();
     public void OnNextClicked() => LoadNextLevel();
     public void OnMenuClicked() => SceneManager.LoadScene(0);
 
-    // ✅ SỬA: Restart from Level 1
     public void RestartFromLevel1()
     {
         Debug.Log("🔄 Restarting from Level 1");

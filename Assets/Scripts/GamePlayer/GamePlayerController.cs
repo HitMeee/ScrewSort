@@ -8,16 +8,18 @@ public class GamePlayerController : MonoBehaviour
 
     public GameScene gameScene;
     public GameContaint gameContaint;
-    public UIManager uiManager; // ✅ THÊM: Reference đến UIManager
+    public UIManager uiManager;
 
     private void Awake()
     {
         Instance = this;
+
+        // ✅ CHỈ ĐẢM BẢO SOUNDMANAGER TỒN TẠI CHO SFX
+        EnsureSoundManagerExists();
     }
 
     void Start()
     {
-        // Tìm UIManager nếu chưa được gán
         if (uiManager == null)
         {
             uiManager = FindObjectOfType<UIManager>();
@@ -32,14 +34,23 @@ public class GamePlayerController : MonoBehaviour
 
     void Update()
     {
-        // Có thể thêm logic kiểm tra ESC để mở Start Menu
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             ToggleStartMenu();
         }
     }
 
-    // Phương thức để toggle Start Menu (Pause/Resume)
+    // ✅ CHỈ ĐẢM BẢO SOUNDMANAGER TỒN TẠI CHO SFX
+    private void EnsureSoundManagerExists()
+    {
+        if (SoundManager.Instance == null)
+        {
+            GameObject soundManagerGO = new GameObject("SoundManager");
+            soundManagerGO.AddComponent<SoundManager>();
+            Debug.Log("🔊 Auto-created SoundManager for SFX");
+        }
+    }
+
     public void ToggleStartMenu()
     {
         if (uiManager != null)
@@ -55,7 +66,6 @@ public class GamePlayerController : MonoBehaviour
         }
     }
 
-    // Phương thức để bắt đầu game
     public void StartGame()
     {
         if (uiManager != null)
@@ -63,11 +73,9 @@ public class GamePlayerController : MonoBehaviour
             uiManager.HideStartMenu();
         }
 
-        // Có thể thêm logic khởi tạo game khác ở đây
         Debug.Log("🚀 Game Started!");
     }
 
-    // Phương thức để quay về Start Menu
     public void ReturnToMenu()
     {
         if (uiManager != null)

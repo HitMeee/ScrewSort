@@ -27,12 +27,10 @@ public class ToolManager : MonoBehaviour
 
     private void InitializeToolData()
     {
-        // Đảm bảo có đủ 2 tools với ID đúng
         if (toolDataList.Count < 2)
         {
             toolDataList.Clear();
 
-            // BackStep Tool - ID = 1
             toolDataList.Add(new ToolData
             {
                 id = 1,
@@ -42,7 +40,6 @@ public class ToolManager : MonoBehaviour
                 currentCount = 3
             });
 
-            // AddBolt Tool - ID = 2
             toolDataList.Add(new ToolData
             {
                 id = 2,
@@ -74,10 +71,10 @@ public class ToolManager : MonoBehaviour
     private void SetupButtons()
     {
         if (backStepButton != null)
-            backStepButton.onClick.AddListener(() => OnToolClicked(1)); // BackStep ID = 1
+            backStepButton.onClick.AddListener(() => OnToolClicked(1));
 
         if (addBoltButton != null)
-            addBoltButton.onClick.AddListener(() => OnToolClicked(2)); // AddBolt ID = 2
+            addBoltButton.onClick.AddListener(() => OnToolClicked(2));
     }
 
     public void OnToolClicked(int toolId)
@@ -141,23 +138,29 @@ public class ToolManager : MonoBehaviour
     public void BuyTool(ToolData tool)
     {
         var coinManager = FindObjectOfType<CoinManager>();
-        if (coinManager == null) return;
+        var uiManager = FindObjectOfType<UIManager>();
 
-        if (coinManager.GetCoins() >= tool.price)
+        if (coinManager == null || uiManager == null) return;
+
+        int currentCoins = coinManager.GetCoins();
+
+        // ✅ KIỂM TRA ĐỦ TIỀN
+        if (currentCoins >= tool.price)
         {
+            // Đủ tiền - mua thành công
             coinManager.AddCoins(-tool.price);
             tool.AddCount(1);
             SaveCounts();
             UpdateUI();
 
-            var uiManager = FindObjectOfType<UIManager>();
-            uiManager?.HideBuyToolUI();
-
+            uiManager.HideBuyToolUI();
             Debug.Log($"✅ Bought {tool.nameTools} for {tool.price} coins!");
         }
         else
         {
-            Debug.Log($"❌ Not enough coins! Need {tool.price}, have {coinManager.GetCoins()}");
+            // ✅ KHÔNG ĐỦ TIỀN - HIỂN THỊ NOT ENOUGH MONEY UI ĐơN GIẢN
+            uiManager.ShowNotEnoughMoneyUI();
+            Debug.Log($"❌ Not enough coins! Need {tool.price}, have {currentCoins}");
         }
     }
 
@@ -206,7 +209,6 @@ public class ToolManager : MonoBehaviour
         UpdateUI();
     }
 
-    // Add tool programmatically
     public void AddToolData(ToolData newTool)
     {
         if (toolDataList.Any(t => t.id == newTool.id)) return;

@@ -24,18 +24,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Image toolImageDisplay;
     [SerializeField] private TextMeshProUGUI priceText;
 
+    [Header("💰 Not Enough Money UI")]
+    [SerializeField] private GameObject notEnoughMoneyUI;
+    [SerializeField] private Button notEnoughMoneyBackButton;
+
     private ToolData currentToolToBuy;
     private GameScene gameScene;
 
     void Start()
     {
         gameScene = FindObjectOfType<GameScene>();
-
         SetupStartMenuUI();
         SetupCompleteUI();
         SetupBuyToolUI();
+        SetupNotEnoughMoneyUI();
 
-        // Hiển thị Start Menu khi bắt đầu game
         if (showStartMenuOnStart)
         {
             ShowStartMenu();
@@ -61,10 +64,7 @@ public class UIManager : MonoBehaviour
         if (startMenuUI != null)
         {
             startMenuUI.SetActive(true);
-
-            // Tạm dừng game khi hiển thị Start Menu
             Time.timeScale = 0f;
-
             Debug.Log("🎮 Start Menu hiển thị");
         }
     }
@@ -74,51 +74,40 @@ public class UIManager : MonoBehaviour
         if (startMenuUI != null)
         {
             startMenuUI.SetActive(false);
-
-            // Tiếp tục game khi ẩn Start Menu
             Time.timeScale = 1f;
-
             Debug.Log("🎮 Start Menu đã ẩn - Game bắt đầu!");
         }
     }
 
     private void OnPlayButtonClicked()
     {
-        Debug.Log("▶️ Nút Play được nhấn!");
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
 
-        // Ẩn Start Menu
+        Debug.Log("▶️ Nút Play được nhấn!");
         HideStartMenu();
 
-        // Bắt đầu game từ level hiện tại hoặc level 1
         if (gameScene != null)
         {
-            // Có thể load level từ đầu hoặc tiếp tục level hiện tại
-            // gameScene.RestartFromLevel1(); // Nếu muốn bắt đầu từ Level 1
-            gameScene.ReloadCurrentLevel(); // Hoặc tiếp tục level hiện tại
+            gameScene.ReloadCurrentLevel();
         }
     }
 
-    // Phương thức để show Start Menu từ ngoài (ví dụ từ Pause menu)
     public void ReturnToStartMenu()
     {
         ShowStartMenu();
     }
 
+    // ===== COMPLETE UI =====
     private void SetupCompleteUI()
     {
         completeUI.SetActive(false);
         nextButton.onClick.AddListener(OnNext);
     }
 
-    private void SetupBuyToolUI()
-    {
-        if (buyToolUI != null) buyToolUI.SetActive(false);
-        if (closeBuyButton != null) closeBuyButton.onClick.AddListener(HideBuyToolUI);
-        if (backBuyButton != null) backBuyButton.onClick.AddListener(HideBuyToolUI);
-        if (buyButton != null) buyButton.onClick.AddListener(OnBuyTool);
-    }
-
-    // ===== COMPLETE UI =====
     public void ShowComplete()
     {
         completeUI.SetActive(true);
@@ -126,6 +115,12 @@ public class UIManager : MonoBehaviour
 
     private void OnNext()
     {
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
         coinManager.AddLevelReward();
         completeUI.SetActive(false);
 
@@ -134,6 +129,14 @@ public class UIManager : MonoBehaviour
     }
 
     // ===== BUY TOOL UI =====
+    private void SetupBuyToolUI()
+    {
+        if (buyToolUI != null) buyToolUI.SetActive(false);
+        if (closeBuyButton != null) closeBuyButton.onClick.AddListener(HideBuyToolUI);
+        if (backBuyButton != null) backBuyButton.onClick.AddListener(HideBuyToolUI);
+        if (buyButton != null) buyButton.onClick.AddListener(OnBuyTool);
+    }
+
     public void ShowBuyToolUI(ToolData toolData)
     {
         currentToolToBuy = toolData;
@@ -154,6 +157,12 @@ public class UIManager : MonoBehaviour
 
     private void OnBuyTool()
     {
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
         if (currentToolToBuy == null) return;
 
         var toolManager = FindObjectOfType<ToolManager>();
@@ -163,15 +172,63 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // ===== 💰 NOT ENOUGH MONEY UI - ĐƠN GIẢN =====
+    private void SetupNotEnoughMoneyUI()
+    {
+        if (notEnoughMoneyUI != null)
+        {
+            notEnoughMoneyUI.SetActive(false);
+        }
+
+        if (notEnoughMoneyBackButton != null)
+        {
+            notEnoughMoneyBackButton.onClick.AddListener(HideNotEnoughMoneyUI);
+        }
+    }
+
+    public void ShowNotEnoughMoneyUI()
+    {
+        if (notEnoughMoneyUI == null) return;
+
+        // ✅ ẨN BUY TOOL UI VÀ HIỆN NOT ENOUGH MONEY UI
+        HideBuyToolUI();
+        notEnoughMoneyUI.SetActive(true);
+
+        Debug.Log("💰 Showing not enough money UI");
+    }
+
+    public void HideNotEnoughMoneyUI()
+    {
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
+        if (notEnoughMoneyUI != null)
+        {
+            notEnoughMoneyUI.SetActive(false);
+        }
+
+        Debug.Log("💰 Hidden not enough money UI");
+    }
+
     // ===== PUBLIC METHODS =====
     public bool IsStartMenuActive()
     {
         return startMenuUI != null && startMenuUI.activeSelf;
     }
 
-    // Phương thức để tắt Start Menu từ code khác
     public void DisableStartMenuOnStart()
     {
         showStartMenuOnStart = false;
+    }
+
+    public bool IsAnyUIActive()
+    {
+        return (startMenuUI != null && startMenuUI.activeSelf) ||
+               (completeUI != null && completeUI.activeSelf) ||
+               (buyToolUI != null && buyToolUI.activeSelf) ||
+               (notEnoughMoneyUI != null && notEnoughMoneyUI.activeSelf);
     }
 }

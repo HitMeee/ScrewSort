@@ -27,6 +27,7 @@ public class ScrewBase : MonoBehaviour
         }
     }
 
+    // ✅ SỬA: Thêm âm thanh khi lift screw
     public void LiftUp(float upOffset, float duration, System.Action onComplete = null)
     {
         if (originalPosition == Vector3.zero)
@@ -34,7 +35,12 @@ public class ScrewBase : MonoBehaviour
 
         transform.DOKill();
 
-        // ✅ SỬA: Sử dụng độ cao đồng nhất
+        // ✅ PHÁT ÂM THANH KHI LIFT
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayScrewLift();
+        }
+
         Vector3 uniformPos = CalculateUniformLiftPosition(upOffset);
 
         transform.DOMove(uniformPos, duration)
@@ -46,9 +52,16 @@ public class ScrewBase : MonoBehaviour
             });
     }
 
+    // ✅ SỬA: Thêm âm thanh khi di chuyển screw
     public void MoveTo(Vector3 targetPosition, float duration, System.Action onComplete = null)
     {
         transform.DOKill();
+
+        // ✅ PHÁT ÂM THANH KHI MOVE
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayScrewMove();
+        }
 
         transform.DOMove(targetPosition, duration)
             .SetEase(Ease.InOutQuart)
@@ -56,13 +69,27 @@ public class ScrewBase : MonoBehaviour
             {
                 originalPosition = targetPosition;
                 isLifted = false;
+
+                // ✅ PHÁT ÂM THANH KHI ĐẶT XUỐNG
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlayScrewPlace();
+                }
+
                 onComplete?.Invoke();
             });
     }
 
+    // ✅ SỬA: Thêm âm thanh khi drop screw
     public void DropToOriginal(float duration, System.Action onComplete = null)
     {
         transform.DOKill();
+
+        // ✅ PHÁT ÂM THANH KHI DROP
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayScrewDrop();
+        }
 
         transform.DOMove(originalPosition, duration)
             .SetEase(Ease.OutBounce)
