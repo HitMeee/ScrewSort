@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SortScrew : MonoBehaviour
@@ -76,8 +77,8 @@ public class SortScrew : MonoBehaviour
             return;
         }
 
-        // Thực hiện di chuyển (trạng thái đã được ghi ở HandleScrewMovement)
-        ExecuteMove(source, target, moveCount, lifted.id);
+        // ✅ SỬA: Sử dụng Coroutine để delay giữa các screws
+        StartCoroutine(ExecuteMoveWithDelay(source, target, moveCount, lifted.id));
     }
 
     // ✅ ĐƠN GIẢN HÓA: Swap screws (không cần ghi lại riêng)
@@ -119,8 +120,8 @@ public class SortScrew : MonoBehaviour
         return count;
     }
 
-    // Thực hiện di chuyển với bảo vệ scale
-    private void ExecuteMove(BotlBase source, BotlBase target, int count, int screwId)
+    // ✅ MỚI: Thực hiện di chuyển với delay 0.1s giữa các screw
+    private IEnumerator ExecuteMoveWithDelay(BotlBase source, BotlBase target, int count, int screwId)
     {
         for (int i = 0; i < count; i++)
         {
@@ -140,15 +141,28 @@ public class SortScrew : MonoBehaviour
 
             // Animation
             Vector3 pos = GetPosition(target, target.screwBases.Count - 1);
+
+            bool moveCompleted = false;
             screw.MoveTo(pos, mover.moveDuration, () => {
                 if (screw != null)
                 {
                     screw.originalPosition = pos;
                     screw.transform.localScale = originalScale;
                 }
+                moveCompleted = true;
             });
+
+            // Đợi animation hoàn thành
+            yield return new WaitUntil(() => moveCompleted);
+
+            // ✅ Delay 0.1s giữa các screw (trừ screw cuối cùng)
+            if (i < count - 1)
+            {
+                yield return new WaitForSeconds(0.02f);
+            }
         }
     }
+
 
     // Tính vị trí đúng
     private Vector3 GetPosition(BotlBase bolt, int index)

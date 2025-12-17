@@ -14,22 +14,12 @@ public class GamePlayerController : MonoBehaviour
     {
         Instance = this;
 
-        // ✅ CHỈ ĐẢM BẢO SOUNDMANAGER TỒN TẠI CHO SFX
-        EnsureSoundManagerExists();
     }
 
     void Start()
     {
-        if (uiManager == null)
-        {
-            uiManager = FindObjectOfType<UIManager>();
-        }
-
-        // Khởi tạo game systems
         gameScene.Init();
         gameContaint.Init();
-
-        Debug.Log("🎮 GamePlayerController đã khởi tạo");
     }
 
     void Update()
@@ -40,16 +30,7 @@ public class GamePlayerController : MonoBehaviour
         }
     }
 
-    // ✅ CHỈ ĐẢM BẢO SOUNDMANAGER TỒN TẠI CHO SFX
-    private void EnsureSoundManagerExists()
-    {
-        if (SoundManager.Instance == null)
-        {
-            GameObject soundManagerGO = new GameObject("SoundManager");
-            soundManagerGO.AddComponent<SoundManager>();
-            Debug.Log("🔊 Auto-created SoundManager for SFX");
-        }
-    }
+
 
     public void ToggleStartMenu()
     {

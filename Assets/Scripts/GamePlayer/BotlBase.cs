@@ -37,7 +37,7 @@ public class BotlBase : MonoBehaviour
     }
     public bool IsComplete()
     {
-        if (screwBases == null || screwBases.Count < 3) return false;
+        if (screwBases == null ) return false;
 
         // Tất cả screw phải cùng màu
         int firstId = screwBases[0].id;
@@ -46,7 +46,7 @@ public class BotlBase : MonoBehaviour
             if (s == null || s.id != firstId) return false;
         }
 
-        return true; // Hoàn thành khi có ít nhất 3 screw cùng màu
+        return true; 
     }
 
     public int SlotsAvailable()

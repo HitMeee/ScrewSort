@@ -17,6 +17,9 @@ public class SoundManager : MonoBehaviour
     [SerializeField] private AudioClip buttonClickSound;
     [SerializeField] private AudioClip levelCompleteSound;
 
+    [Header("Completion Sounds")]
+    [SerializeField] private AudioClip boltCompleteSound; // Âm thanh khi hoàn thành bolt (5 same-color screws)
+
     [Header("Volume Settings")]
     [Range(0f, 1f)] public float sfxVolume = 0.7f;
 
@@ -37,7 +40,6 @@ public class SoundManager : MonoBehaviour
 
     private void InitializeAudioSources()
     {
-        // ✅ CHỈ TẠO SFX AUDIOSOURCE
         if (sfxSource == null)
         {
             AudioSource[] sources = GetComponents<AudioSource>();
@@ -75,12 +77,18 @@ public class SoundManager : MonoBehaviour
         PlayButtonClick();
     }
 
+    [ContextMenu("🎵 Test Bolt Complete")]
+    public void TestBoltComplete()
+    {
+        PlayBoltComplete();
+    }
+
     public void UpdateVolumes()
     {
         if (sfxSource != null) sfxSource.volume = sfxVolume;
     }
 
-    // ✅ SCREW SOUNDS
+    // SCREW SOUNDS
     public void PlayScrewLift()
     {
         PlaySFX(screwLiftSound, "Screw Lift");
@@ -101,7 +109,7 @@ public class SoundManager : MonoBehaviour
         PlaySFX(screwPlaceSound, "Screw Place");
     }
 
-    // ✅ UI SOUNDS
+    // UI SOUNDS
     public void PlayButtonClick()
     {
         PlaySFX(buttonClickSound, "Button Click");
@@ -112,13 +120,20 @@ public class SoundManager : MonoBehaviour
         PlaySFX(levelCompleteSound, "Level Complete");
     }
 
-    // ✅ CORE SFX METHOD
-    private void PlaySFX(AudioClip clip, string soundName)
+    // BOLT COMPLETION SOUND (only for full 5-screw completion)
+    public void PlayBoltComplete()
+    {
+        PlaySFX(boltCompleteSound, "Bolt Complete", 0.9f);
+    }
+
+    // CORE SFX METHOD
+    private void PlaySFX(AudioClip clip, string soundName, float volumeMultiplier = 1f)
     {
         if (sfxSource != null && clip != null)
         {
-            sfxSource.PlayOneShot(clip, sfxVolume);
-            Debug.Log($"🔊 Playing: {soundName}");
+            float finalVolume = Mathf.Clamp01(sfxVolume * volumeMultiplier);
+            sfxSource.PlayOneShot(clip, finalVolume);
+            Debug.Log($"🔊 Playing: {soundName} (Volume: {finalVolume:F2})");
         }
         else if (sfxSource == null)
         {
@@ -134,18 +149,18 @@ public class SoundManager : MonoBehaviour
     {
         if (sfxSource != null && clip != null)
         {
-            sfxSource.PlayOneShot(clip, volume);
+            sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
         }
     }
 
-    // ✅ VOLUME CONTROL
+    // VOLUME CONTROL
     public void SetSFXVolume(float volume)
     {
         sfxVolume = Mathf.Clamp01(volume);
         if (sfxSource != null) sfxSource.volume = sfxVolume;
     }
 
-    // ✅ UTILITY METHODS
+    // UTILITIES
     public bool HasSFXSource() => sfxSource != null;
     public bool IsSoundManagerReady() => sfxSource != null;
 }

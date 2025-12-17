@@ -1,18 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class BoltLogicManager : MonoBehaviour
 {
-    [Header("Settings")]
-    public float moveDuration = 0.3f;
+    public float moveDuration = 0.2f;
     public float uniformLiftHeight = 1.5f;
     public float liftDuration = 0.4f;
-
-    [Header("References")]
     public List<BotlBase> allBolts;
 
-    // Private state
+    // State
     private ScrewBase currentLiftedScrew;
     private BotlBase currentSourceBolt;
     private Queue<BotlBase> clickQueue = new Queue<BotlBase>();
@@ -21,51 +19,17 @@ public class BoltLogicManager : MonoBehaviour
 
     public void Init()
     {
-        SetupLiftHeight();
-        SetupBolts();
-        InitializeLockStatus();
-        Debug.Log("🎮 BoltLogicManager initialized");
+        SetUp();
     }
-
-    private void SetupLiftHeight()
+    public void SetUp()
     {
-        if (uniformLiftHeight <= 0)
-            uniformLiftHeight = CalculateOptimalLiftHeight();
-    }
-
-    private void SetupBolts()
-    {
+        // Setup bolts
         if (allBolts == null || allBolts.Count == 0)
-        {
-            var levelController = GamePlayerController.Instance?.gameContaint?.levelController;
-            allBolts = levelController?.GetAllBolts() ?? new List<BotlBase>();
-        }
-    }
+            allBolts = GamePlayerController.Instance?.gameContaint?.levelController?.GetAllBolts() ?? new List<BotlBase>();
 
-    private void InitializeLockStatus()
-    {
+        // Initialize lock status
         boltLockStatus.Clear();
-        foreach (var bolt in allBolts)
-        {
-            if (bolt != null) boltLockStatus[bolt] = false;
-        }
-    }
-
-    private float CalculateOptimalLiftHeight()
-    {
-        float maxHeight = 0f;
-        foreach (var bolt in allBolts)
-        {
-            if (bolt?.postBolts != null)
-            {
-                foreach (var post in bolt.postBolts)
-                {
-                    if (post != null)
-                        maxHeight = Mathf.Max(maxHeight, post.transform.position.y - bolt.transform.position.y);
-                }
-            }
-        }
-        return maxHeight + 0.8f;
+        allBolts.ForEach(bolt => { if (bolt != null) boltLockStatus[bolt] = false; });
     }
 
     public void OnBoltClicked(BotlBase clickedBolt)
@@ -74,8 +38,6 @@ public class BoltLogicManager : MonoBehaviour
             return;
 
         clickQueue.Enqueue(clickedBolt);
-        Debug.Log($"🎯 Added {clickedBolt.name} to queue. Size: {clickQueue.Count}");
-
         if (!isProcessing)
             StartCoroutine(ProcessClickQueue());
     }
@@ -89,7 +51,7 @@ public class BoltLogicManager : MonoBehaviour
             var bolt = clickQueue.Dequeue();
             if (bolt != null && !IsBoltLocked(bolt))
             {
-                yield return StartCoroutine(ProcessBoltClick(bolt));
+                yield return ProcessBoltClick(bolt);
                 yield return new WaitForSeconds(0.1f);
             }
         }
@@ -99,70 +61,62 @@ public class BoltLogicManager : MonoBehaviour
 
     private IEnumerator ProcessBoltClick(BotlBase clickedBolt)
     {
-        var sourceBolt = currentSourceBolt; // Store for completion check
+        var sourceBolt = currentSourceBolt;
 
+        // Main logic decision
         if (HasLiftedScrew())
-            yield return StartCoroutine(HandleLiftedScrewClick(clickedBolt));
+            yield return HandleLiftedScrewClick(clickedBolt);
         else
-            yield return StartCoroutine(LiftScrewFromBolt(clickedBolt));
+            yield return LiftScrewFromBolt(clickedBolt);
 
-        // Check completion after moves
+        // Post-processing
         if (sourceBolt != null && sourceBolt != clickedBolt)
-            CheckGameCompletion(sourceBolt, clickedBolt);
-
+            CheckGameCompletion();
         UpdateBoltLockStatus();
     }
 
     private IEnumerator HandleLiftedScrewClick(BotlBase targetBolt)
     {
-        // Same bolt - drop back
+        // Drop back if same bolt
         if (targetBolt == currentSourceBolt)
         {
-            yield return StartCoroutine(DropScrewBack());
+            yield return DropScrew();
             yield break;
         }
 
         var targetTopScrew = targetBolt.GetTopScrew();
 
-        // CASE 1: Target empty - move screws
-        if (targetTopScrew == null)
-        {
-            Debug.Log("🟢 Target empty - moving screws");
-            yield return StartCoroutine(MoveScrewToBolt(targetBolt));
-        }
-        // CASE 2: Same color
-        else if (currentLiftedScrew.id == targetTopScrew.id)
-        {
-            // CASE 2A: Target has space - move screws
-            if (targetBolt.SlotsAvailable() > 0)
-            {
-                Debug.Log("🟡 Same color + space available - moving screws");
-                yield return StartCoroutine(MoveScrewToBolt(targetBolt));
-            }
-            // CASE 2B: Target full - swap (drop current + lift target)
-            else
-            {
-                Debug.Log("🔄 Same color + target full - swapping screws");
-                yield return StartCoroutine(SwapScrewsProper(targetBolt, targetTopScrew));
-            }
-        }
-        // CASE 3: Different color - swap (drop current + lift target)
+        // Determine action: Move or Swap
+        if (ShouldMoveScrews(targetBolt, targetTopScrew))
+            yield return MoveScrewToBolt(targetBolt);
         else
-        {
-            Debug.Log("🔴 Different color - swapping screws");
-            yield return StartCoroutine(SwapScrewsProper(targetBolt, targetTopScrew));
-        }
+            yield return SwapScrews(targetBolt, targetTopScrew);
     }
 
-    private IEnumerator DropScrewBack()
+    private bool ShouldMoveScrews(BotlBase targetBolt, ScrewBase targetTopScrew)
     {
-        bool completed = false;
-        currentLiftedScrew.DropToOriginal(moveDuration, () =>
-        {
-            ResetLiftedScrew();
-            completed = true;
-        });
-        yield return new WaitUntil(() => completed);
+        // Empty target or same color with space
+        return targetTopScrew == null ||
+               (currentLiftedScrew.id == targetTopScrew.id && targetBolt.SlotsAvailable() > 0);
+    }
+
+    private IEnumerator LiftScrewFromBolt(BotlBase sourceBolt)
+    {
+        if (sourceBolt?.screwBases?.Count <= 0) yield break;
+
+        var topScrew = sourceBolt.GetTopScrew();
+        if (topScrew == null) yield break;
+
+        currentLiftedScrew = topScrew;
+        currentSourceBolt = sourceBolt;
+
+        yield return WaitForAnimation(topScrew.LiftUp, uniformLiftHeight, liftDuration);
+    }
+
+    private IEnumerator DropScrew()
+    {
+        yield return WaitForAnimation(currentLiftedScrew.DropToOriginal, moveDuration);
+        ResetLiftedScrew();
     }
 
     private IEnumerator MoveScrewToBolt(BotlBase targetBolt)
@@ -176,76 +130,42 @@ public class BoltLogicManager : MonoBehaviour
         }
     }
 
-    private IEnumerator SwapScrewsProper(BotlBase targetBolt, ScrewBase targetTopScrew)
+    private IEnumerator SwapScrews(BotlBase targetBolt, ScrewBase targetTopScrew)
     {
-        Debug.Log($"🔄 Starting proper swap: Drop {currentLiftedScrew.id} from {currentSourceBolt.name}, Lift {targetTopScrew.id} from {targetBolt.name}");
+        // Drop current
+        yield return DropScrew();
 
-        // STEP 1: Drop current screw back to source
-        bool dropCompleted = false;
-        currentLiftedScrew.DropToOriginal(moveDuration, () =>
-        {
-            dropCompleted = true;
-            Debug.Log("✅ Dropped current screw back to source");
-        });
-        yield return new WaitUntil(() => dropCompleted);
-
-        // STEP 2: Reset current state
-        ResetLiftedScrew();
-
-        // STEP 3: Lift target screw
+        // Lift target
         if (targetTopScrew != null && targetBolt != null)
         {
             currentLiftedScrew = targetTopScrew;
             currentSourceBolt = targetBolt;
-
-            bool liftCompleted = false;
-            targetTopScrew.LiftUp(uniformLiftHeight, liftDuration, () =>
-            {
-                liftCompleted = true;
-                Debug.Log("✅ Lifted target screw");
-            });
-            yield return new WaitUntil(() => liftCompleted);
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ Target screw or bolt is null!");
+            yield return WaitForAnimation(targetTopScrew.LiftUp, uniformLiftHeight, liftDuration);
         }
     }
 
-    // ✅ SỬA: Chỉ giữ lại 1 method LiftScrewFromBolt
-    private IEnumerator LiftScrewFromBolt(BotlBase sourceBolt)
+    // ✅ HELPER: Unified animation waiting
+    private IEnumerator WaitForAnimation(System.Action<float, System.Action> animationMethod, float duration, System.Action onComplete = null)
     {
-        if (sourceBolt?.screwBases?.Count > 0)
-        {
-            var topScrew = sourceBolt.GetTopScrew();
-            if (topScrew != null)
-            {
-                currentLiftedScrew = topScrew;
-                currentSourceBolt = sourceBolt;
-
-                bool completed = false;
-                topScrew.LiftUp(uniformLiftHeight, liftDuration, () => completed = true);
-                yield return new WaitUntil(() => completed);
-                Debug.Log($"✅ Lifted screw {topScrew.id} from {sourceBolt.name}");
-            }
-        }
+        bool completed = false;
+        animationMethod(duration, () => { onComplete?.Invoke(); completed = true; });
+        yield return new WaitUntil(() => completed);
     }
 
-    private void CheckGameCompletion(BotlBase sourceBolt, BotlBase targetBolt)
+    private IEnumerator WaitForAnimation(System.Action<float, float, System.Action> animationMethod, float param1, float param2)
     {
-        var boltChecker = GamePlayerController.Instance?.gameContaint?.sortScrew?.checker;
-        boltChecker?.CheckAfterMove(sourceBolt, targetBolt);
+        bool completed = false;
+        animationMethod(param1, param2, () => completed = true);
+        yield return new WaitUntil(() => completed);
+    }
+
+    private void CheckGameCompletion()
+    {
+        GamePlayerController.Instance?.gameContaint?.sortScrew?.checker?.CheckAfterMove(currentSourceBolt, null);
 
         if (IsGameComplete())
         {
-            Debug.Log("🏆 GAME COMPLETED!");
-
-            // ✅ PHÁT ÂM THANH HOÀN THÀNH LEVEL
-            if (SoundManager.Instance != null)
-            {
-                SoundManager.Instance.PlayLevelComplete();
-            }
-
+            SoundManager.Instance?.PlayLevelComplete();
             GamePlayerController.Instance?.gameScene?.OnLevelComplete();
             ForceResetState();
         }
@@ -253,45 +173,24 @@ public class BoltLogicManager : MonoBehaviour
 
     public bool IsGameComplete()
     {
-        if (allBolts == null || allBolts.Count == 0) return false;
+        if (allBolts?.Count == 0) return false;
 
-        int completed = 0, total = 0;
-
-        foreach (var bolt in allBolts)
-        {
-            if (bolt?.screwBases?.Count > 0)
-            {
-                total++;
-                if (IsBoltComplete(bolt)) completed++;
-            }
-        }
-
-        return total > 0 && completed == total;
+        var activeBolts = allBolts.FindAll(b => b?.screwBases?.Count > 0);
+        return activeBolts.Count > 0 && activeBolts.All(IsBoltComplete);
     }
 
     private void UpdateBoltLockStatus()
     {
-        foreach (var bolt in allBolts)
-        {
-            if (bolt != null)
-                boltLockStatus[bolt] = IsBoltComplete(bolt);
-        }
+        allBolts.ForEach(bolt => { if (bolt != null) boltLockStatus[bolt] = IsBoltComplete(bolt); });
     }
 
     private bool IsBoltComplete(BotlBase bolt)
     {
-        if (bolt?.screwBases == null || bolt.screwBases.Count != 5) return false;
-
-        int firstId = bolt.screwBases[0].id;
-        foreach (var screw in bolt.screwBases)
-        {
-            if (screw?.id != firstId) return false;
-        }
-        return true;
+        if (bolt?.screwBases?.Count != 5) return false;
+        return bolt.screwBases.All(screw => screw?.id == bolt.screwBases[0].id);
     }
 
-    private bool IsBoltLocked(BotlBase bolt) =>
-        boltLockStatus.ContainsKey(bolt) && boltLockStatus[bolt];
+    private bool IsBoltLocked(BotlBase bolt) => boltLockStatus.GetValueOrDefault(bolt, false);
 
     private void ResetLiftedScrew()
     {
