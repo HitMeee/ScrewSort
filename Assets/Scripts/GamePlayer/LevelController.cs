@@ -31,8 +31,14 @@ public class LevelController : MonoBehaviour
     private void CompleteLevel()
     {
         gameCompleted = true;
-
         backStep?.ClearHistory();
+        
+        // ✅ Gọi TimeManager để chốt số sao
+        if (TimeManager.Instance != null)
+        {
+            TimeManager.Instance.FinishLevel();
+        }
+
         GamePlayerController.Instance?.gameScene?.OnLevelComplete();
     }
 
@@ -76,6 +82,22 @@ public class LevelController : MonoBehaviour
         if (levelDatas?.lsDataBolt == null || levelDatas.lsDataBolt.Count == 0)
         {
             CreateDefaultLevel();
+        }
+        if (TimeManager.Instance != null)
+        {
+            // Nếu data có timeLimit > 0 thì dùng, không thì mặc định 60s
+            float timeToSet = (levelDatas.timeLimit > 0) ? levelDatas.timeLimit : 60f;
+            TimeManager.Instance.SetLevelTime(timeToSet);
+        }
+        else 
+        {
+            // Nếu chưa tìm thấy Instance (trường hợp load scene chưa xong), thử tìm thủ công
+            var tm = FindObjectOfType<TimeManager>();
+            if (tm != null)
+            {
+                 float timeToSet = (levelDatas.timeLimit > 0) ? levelDatas.timeLimit : 60f;
+                 tm.SetLevelTime(timeToSet);
+            }
         }
 
         if (PostCreateBolts != null && levelDatas?.lsDataBolt != null)
@@ -174,6 +196,7 @@ public class LevelController : MonoBehaviour
 public class LevelData
 {
     public List<DataBolt> lsDataBolt = new List<DataBolt>();
+    public float timeLimit = 60f;
 }
 
 [System.Serializable]

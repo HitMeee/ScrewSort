@@ -17,6 +17,10 @@ public class LevelEditorOdin : MonoBehaviour
     [LabelText("Tên Level")]
     [SerializeField] private string levelName = "New Level";
 
+    [HorizontalGroup("Info")]
+    [LabelText("Thời gian (s)")]
+    [SerializeField] private float levelTime = 60f;
+
     [Space(10)]
     [Title("🔧 Cấu Hình Bolt")]
     [TableList(AlwaysExpanded = true)]
@@ -271,8 +275,9 @@ public class LevelEditorOdin : MonoBehaviour
     private LevelData ConvertToLevelData()
     {
         var levelData = new LevelData();
+        levelData.timeLimit = levelTime; // ✅ LƯU thời gian vào data
+        
         levelData.lsDataBolt = new List<DataBolt>();
-
         for (int i = 0; i < boltSetups.Count; i++)
         {
             levelData.lsDataBolt.Add(new DataBolt
@@ -281,7 +286,6 @@ public class LevelEditorOdin : MonoBehaviour
                 lsIdScrew = new List<int>(boltSetups[i].screwIds)
             });
         }
-
         return levelData;
     }
 
@@ -289,14 +293,19 @@ public class LevelEditorOdin : MonoBehaviour
     {
         boltSetups.Clear();
 
-        if (levelData?.lsDataBolt != null)
+        if (levelData != null)
         {
-            foreach (var dataBolt in levelData.lsDataBolt)
+            levelTime = levelData.timeLimit > 0 ? levelData.timeLimit : 60f; // ✅ LOAD thời gian, nếu = 0 thì lấy 60
+            
+            if (levelData.lsDataBolt != null)
             {
-                boltSetups.Add(new BoltSetup
+                foreach (var dataBolt in levelData.lsDataBolt)
                 {
-                    screwIds = new List<int>(dataBolt.lsIdScrew ?? new List<int>())
-                });
+                    boltSetups.Add(new BoltSetup
+                    {
+                        screwIds = new List<int>(dataBolt.lsIdScrew ?? new List<int>())
+                    });
+                }
             }
         }
     }
