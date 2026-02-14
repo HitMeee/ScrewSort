@@ -21,6 +21,6 @@ public class LoseGameManager : MonoBehaviour
     }
     private void OnExit()
     {
-        losePanel.SetActive(false);
+        SceneManager.LoadScene("LobbyScene");
     }
 }
