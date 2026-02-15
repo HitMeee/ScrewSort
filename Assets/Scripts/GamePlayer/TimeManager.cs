@@ -92,6 +92,15 @@ public class TimeManager : MonoBehaviour
         
         // Gọi UI Win (Ví dụ: UIManager.Instance.ShowWin(stars));
     }
+    
+    // Hàm lấy số sao hiện tại dựa trên thời gian còn lại
+    public int GetCurrentStars()
+    {
+        if (totalTime <= 0) return 1; // Nếu không có timer, mặc định 1 sao
+        
+        float percentLeft = (currentTime / totalTime) * 100f;
+        return CalculateStars(percentLeft);
+    }
 
     // Hàm tắt timer cưỡng bức (ví dụ khi bấm nút Pause hoặc về Home)
     public void StopAndHideTimer()

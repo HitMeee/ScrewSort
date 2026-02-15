@@ -31,9 +31,28 @@ public class CoinManager : MonoBehaviour
         UpdateUI();
     }
 
-    public void AddLevelReward()
+    public void AddLevelReward(int stars = 1)
     {
-        AddCoins(50);
+        // Tính coin dựa trên số sao
+        int reward = 0;
+        switch (stars)
+        {
+            case 1:
+                reward = 30;
+                break;
+            case 2:
+                reward = 45;
+                break;
+            case 3:
+                reward = 60;
+                break;
+            default:
+                reward = 30; // Mặc định 30 nếu không hợp lệ
+                break;
+        }
+        
+        Debug.Log($"💰 Nhận {reward} coins cho {stars} sao");
+        AddCoins(reward);
     }
 
     private void UpdateUI()

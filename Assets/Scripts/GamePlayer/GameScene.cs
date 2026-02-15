@@ -87,7 +87,15 @@ public class GameScene : MonoBehaviour
     private IEnumerator DelayedShowUI()
     {
         yield return new WaitForSeconds(0.5f);
-        uiManager.ShowComplete();
+        
+        // Tính số sao dựa trên thời gian còn lại
+        int stars = 1; // Mặc định 1 sao
+        if (TimeManager.Instance != null)
+        {
+            stars = TimeManager.Instance.GetCurrentStars();
+        }
+        
+        uiManager.ShowComplete(stars);
     }
 
     private IEnumerator DelayedNext()

@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
+using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
@@ -13,6 +15,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject completeUI;
     [SerializeField] private Button nextButton;
     [SerializeField] private CoinManager coinManager;
+    [SerializeField] private GameObject star1;
+    [SerializeField] private GameObject star2;
+    [SerializeField] private GameObject star3;
 
     [Header("🛒 Buy Tool UI")]
     [SerializeField] private GameObject buyToolUI;
@@ -30,6 +35,7 @@ public class UIManager : MonoBehaviour
 
     private ToolData currentToolToBuy;
     private GameScene gameScene;
+    private int currentStars = 1; // Lưu số sao hiện tại
 
     void Start()
     {
@@ -106,11 +112,67 @@ public class UIManager : MonoBehaviour
     {
         completeUI.SetActive(false);
         nextButton.onClick.AddListener(OnNext);
+        
+        // Mặc định ẩn tất cả sao
+        if (star1 != null) star1.SetActive(false);
+        if (star2 != null) star2.SetActive(false);
+        if (star3 != null) star3.SetActive(false);
     }
 
-    public void ShowComplete()
+    public void ShowComplete(int stars = 1)
     {
+        // Lưu số sao để tính coin reward sau
+        currentStars = stars;
+        
+        // Hiển thị popup ngay lập tức
         completeUI.SetActive(true);
+        
+        // Ẩn tất cả sao trước
+        if (star1 != null) star1.SetActive(false);
+        if (star2 != null) star2.SetActive(false);
+        if (star3 != null) star3.SetActive(false);
+        
+        // Bắt đầu coroutine để hiển thị sao với animation
+        StartCoroutine(ShowStarsWithAnimation(stars));
+        
+        Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+    }
+    
+    private IEnumerator ShowStarsWithAnimation(int stars)
+    {
+        // Delay 0.5s trước khi hiển thị sao
+        yield return new WaitForSeconds(0.5f);
+        
+        // Hiển thị Star 1 nếu có
+        if (stars >= 1 && star1 != null)
+        {
+            star1.SetActive(true);
+            star1.transform.localScale = Vector3.one * 0.3f;
+            star1.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
+            
+            // Delay nhỏ giữa các sao
+            yield return new WaitForSeconds(0.2f);
+        }
+        
+        // Hiển thị Star 2 nếu có
+        if (stars >= 2 && star2 != null)
+        {
+            star2.SetActive(true);
+            star2.transform.localScale = Vector3.one * 0.3f;
+            star2.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
+            
+            yield return new WaitForSeconds(0.2f);
+        }
+        
+        // Hiển thị Star 3 nếu có
+        if (stars >= 3 && star3 != null)
+        {
+            star3.SetActive(true);
+            star3.transform.localScale = Vector3.one * 0.3f;
+            star3.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
+        }
+        
+        Debug.Log($"✨ Đã hiển thị {stars} sao với animation");
     }
 
     private void OnNext()
@@ -121,7 +183,8 @@ public class UIManager : MonoBehaviour
             SoundManager.Instance.PlayButtonClick();
         }
 
-        coinManager.AddLevelReward();
+        // Tính coin reward theo số sao
+        coinManager.AddLevelReward(currentStars);
         completeUI.SetActive(false);
 
         var gameScene = FindObjectOfType<GameScene>();
