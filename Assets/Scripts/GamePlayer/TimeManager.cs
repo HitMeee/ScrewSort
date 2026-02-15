@@ -12,6 +12,7 @@ public class TimeManager : MonoBehaviour
     private float totalTime = 60f;
     private float currentTime;
     private bool isTimerRunning = false;
+    private bool hasBeenInitialized = false; // ✅ Cờ kiểm tra đã khởi tạo chưa
 
     private void Awake()
     {
@@ -22,12 +23,16 @@ public class TimeManager : MonoBehaviour
 
     private void Start()
     {
-        // 1. MẶC ĐỊNH TẮT KHI MỚI VÀO GAME
-        isTimerRunning = false;
-        if (timeText != null) 
+        // ✅ CHỈ ẨN TIMER NẾU CHƯA ĐƯỢC KHỞI TẠO
+        if (!hasBeenInitialized)
         {
-            timeText.text = ""; // Xóa nội dung
-            timeText.gameObject.SetActive(false); // Ẩn luôn object text cho gọn
+            isTimerRunning = false;
+            if (timeText != null) 
+            {
+                timeText.text = "";
+                timeText.gameObject.SetActive(false);
+                Debug.Log("⏰ Timer mặc định bị ẩn (chưa khởi tạo level)");
+            }
         }
     }
 
@@ -36,6 +41,9 @@ public class TimeManager : MonoBehaviour
     {
         totalTime = seconds;
         currentTime = seconds;
+        
+        // ✅ ĐÁNH DẤU ĐÃ KHỞI TẠO
+        hasBeenInitialized = true;
         
         // 2. BẬT LÊN KHI VÀO LEVEL
         isTimerRunning = true;
@@ -46,7 +54,7 @@ public class TimeManager : MonoBehaviour
             UpdateUI(); // Cập nhật ngay số giây ban đầu (ví dụ 60:00)
         }
 
-        Debug.Log($"⏰ Timer đã bật: {totalTime}s");
+        Debug.Log($"⏰ Timer đã bật: {totalTime}s (hasBeenInitialized=true)");
     }
 
     private void Update()

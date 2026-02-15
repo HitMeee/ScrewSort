@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using System.Collections;
+using UnityEngine.SceneManagement;
+using Unity.VisualScripting;
 
 public class UIManager : MonoBehaviour
 {
@@ -18,6 +20,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject star1;
     [SerializeField] private GameObject star2;
     [SerializeField] private GameObject star3;
+    [SerializeField] private TextMeshProUGUI rewardText;
+    [SerializeField] private Button ClosePoppup; // Text hiển thị +30, +45, +60
 
     [Header("🛒 Buy Tool UI")]
     [SerializeField] private GameObject buyToolUI;
@@ -49,6 +53,7 @@ public class UIManager : MonoBehaviour
         {
             ShowStartMenu();
         }
+        ClosePoppup.onClick.AddListener(ClosePopupComplete);
     }
 
     // ===== START MENU UI =====
@@ -63,6 +68,10 @@ public class UIManager : MonoBehaviour
                 playButton.onClick.AddListener(OnPlayButtonClicked);
             }
         }
+    }
+    public void ClosePopupComplete()
+    {
+        SceneManager.LoadScene("LobbyScene");
     }
 
     public void ShowStartMenu()
@@ -127,6 +136,9 @@ public class UIManager : MonoBehaviour
         // Hiển thị popup ngay lập tức
         completeUI.SetActive(true);
         
+        // Cập nhật reward text theo số sao
+        UpdateRewardText(stars);
+        
         // Ẩn tất cả sao trước
         if (star1 != null) star1.SetActive(false);
         if (star2 != null) star2.SetActive(false);
@@ -136,6 +148,23 @@ public class UIManager : MonoBehaviour
         StartCoroutine(ShowStarsWithAnimation(stars));
         
         Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+    }
+    
+    private void UpdateRewardText(int stars)
+    {
+        if (rewardText == null) return;
+        
+        int reward = 0;
+        switch (stars)
+        {
+            case 1: reward = 30; break;
+            case 2: reward = 45; break;
+            case 3: reward = 60; break;
+            default: reward = 30; break;
+        }
+        
+        rewardText.text = "+" + reward;
+        Debug.Log($"💰 Cập nhật reward text: +{reward}");
     }
     
     private IEnumerator ShowStarsWithAnimation(int stars)

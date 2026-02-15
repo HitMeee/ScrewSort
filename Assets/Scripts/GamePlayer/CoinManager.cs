@@ -47,7 +47,7 @@ public class CoinManager : MonoBehaviour
                 reward = 60;
                 break;
             default:
-                reward = 30; // Mặc định 30 nếu không hợp lệ
+                reward = 30; 
                 break;
         }
         
