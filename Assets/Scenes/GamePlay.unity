@@ -572,12 +572,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelController: {fileID: 1943911444}
-  currentLevelId: 3
-  levelName: Level 3
+  currentLevelId: 9
+  levelName: Level 9
   levelTime: 10
   boltSetups:
-  - screwIds: 02000000
-  - screwIds: 02000000020000000200000002000000
+  - screwIds: 0100000001000000
+  - screwIds: 0100000001000000
+  - screwIds: 01000000
 --- !u!1 &142519109
 GameObject:
   m_ObjectHideFlags: 0

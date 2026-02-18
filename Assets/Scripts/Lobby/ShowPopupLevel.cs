@@ -60,9 +60,10 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void PlayGame()
     {
-        // Lưu level được chọn vào PlayerPrefs
-        LevelFileManager.SetCurrentLevelId(selectedLevelId);
-        Debug.Log($"▶️ Bắt đầu chơi Level {selectedLevelId}");
+        // 🎮 Set mode = Selected (chơi level tự chọn, KHÔNG ảnh hưởng tiến độ)
+        LevelFileManager.SetPlayMode(LevelFileManager.PlayMode.Selected, selectedLevelId);
+        
+        Debug.Log($"▶️ Chơi LEVEL TỰ CHỌN - Level {selectedLevelId} (không ảnh hưởng tiến độ)");
         
         // Chuyển sang scene GamePlay
         SceneManager.LoadScene("GamePlay");

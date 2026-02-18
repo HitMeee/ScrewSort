@@ -171,8 +171,13 @@ public class LevelEditorOdin : MonoBehaviour
     [Button("Reset to Level 1", ButtonSizes.Large), GUIColor(0.2f, 0.8f, 0.9f)]
     public void ResetToLevel1()
     {
+        // 🔄 Reset toàn bộ tiến độ
+        LevelFileManager.ResetProgress();
+        
+        // 🔄 Set current level về 1
         LevelFileManager.SetCurrentLevelId(1);
-        Debug.Log("🔄 Đã reset về Level 1");
+        
+        Debug.Log("🔄 Đã reset về Level 1 - Chỉ mở Level 1, tất cả level khác bị khóa");
     }
 
     #endregion
