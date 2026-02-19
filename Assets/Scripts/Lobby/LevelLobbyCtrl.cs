@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using DG.Tweening;
 public class LevelLobbyCtrl : MonoBehaviour
 {
     public GameObject panelAllLevel;
@@ -36,6 +36,8 @@ public class LevelLobbyCtrl : MonoBehaviour
         if (panelAllLevel != null)
         {
             panelAllLevel.SetActive(true);
+            panelAllLevel.transform.localScale = Vector3.one * 0.95f;
+            panelAllLevel.transform.DOScale(1f, 0.95f).SetEase(Ease.OutBack);
         }
         
         // 🔒 Refresh lại trạng thái khi mở panel (phòng trường hợp unlock level mới)
@@ -46,7 +48,9 @@ public class LevelLobbyCtrl : MonoBehaviour
     {
         if (panelAllLevel != null)
         {
-            panelAllLevel.SetActive(false);
+            panelAllLevel.transform.DOScale(0.95f, 0.3f).SetEase(Ease.InBack).OnComplete(() => {
+                panelAllLevel.SetActive(false);
+            });
         }
     }
     

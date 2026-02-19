@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using DG.Tweening;  
+using DG.Tweening;
 
 public class ShowPopupLevel : MonoBehaviour
 {
@@ -11,16 +11,16 @@ public class ShowPopupLevel : MonoBehaviour
     public Button btnClosePopup; // Nút đóng popup
     public Button btnShowPopup; // Nút hiển thị popup
     public Button btnPlay;
-    
+
     private int selectedLevelId = 1; // Level được chọn
 
     private void Start()
     {
         if (popupPanel != null)
         {
-            popupPanel.SetActive(false); 
+            popupPanel.SetActive(false);
         }
-        if(btnShowPopup != null)
+        if (btnShowPopup != null)
         {
             btnShowPopup.onClick.AddListener(ShowPopup);
         }
@@ -38,11 +38,11 @@ public class ShowPopupLevel : MonoBehaviour
         if (popupPanel != null)
         {
             popupPanel.SetActive(true);
-            popupPanel.transform.localScale = Vector3.zero; 
-            popupPanel.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack); 
+            popupPanel.transform.localScale = Vector3.one * 0.5f;
+            popupPanel.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
         }
     }
-    
+
     // ✅ THÊM: Phương thức hiển thị popup với levelId cụ thể
     public void ShowPopupForLevel(int levelId)
     {
@@ -54,20 +54,19 @@ public class ShowPopupLevel : MonoBehaviour
     {
         if (popupPanel != null)
         {
-            popupPanel.transform.DOScale(0f, 0.5f).SetEase(Ease.InBack)
-                .OnComplete(() => popupPanel.SetActive(false)); 
+            popupPanel.transform.DOScale(0.5f, 0.5f).SetEase(Ease.InBack)
+                .OnComplete(() => popupPanel.SetActive(false));
         }
     }
     public void PlayGame()
     {
         // 🎮 Set mode = Selected (chơi level tự chọn, KHÔNG ảnh hưởng tiến độ)
         LevelFileManager.SetPlayMode(LevelFileManager.PlayMode.Selected, selectedLevelId);
-        
+
         Debug.Log($"▶️ Chơi LEVEL TỰ CHỌN - Level {selectedLevelId} (không ảnh hưởng tiến độ)");
-        
         // Chuyển sang scene GamePlay
         SceneManager.LoadScene("GamePlay");
     }
 
-   
+
 }

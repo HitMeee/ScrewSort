@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -10,10 +11,12 @@ using UnityEngine.UI;
 public class PlayGame : MonoBehaviour
 {
     [SerializeField] private Button btnPlayGame;
+    [SerializeField] private TextMeshProUGUI tmpLevelText;
     
     void Start()
     {
         btnPlayGame.onClick.AddListener(OnPlayButtonClicked);
+        UpdateTMPLevel();
     }
 
     public void OnPlayButtonClicked()
@@ -28,5 +31,15 @@ public class PlayGame : MonoBehaviour
         
         // Load game scene
         SceneManager.LoadScene("GamePlay");
+    }
+    public void UpdateTMPLevel()
+    {
+        int currentLevel = LevelFileManager.GetProgressLevelId();
+        
+        // Cập nhật text
+        if (tmpLevelText != null)
+        {
+            tmpLevelText.text = $"Level {currentLevel}";
+        }
     }
 }
