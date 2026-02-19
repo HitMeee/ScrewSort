@@ -28,6 +28,12 @@ public class InputController : MonoBehaviour
             return;
         }
 
+        // ✅ THÊM: Block input khi đang có animation
+        if (boltLogicManager != null && boltLogicManager.IsCurrentlyAnimating())
+        {
+            return;
+        }
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
