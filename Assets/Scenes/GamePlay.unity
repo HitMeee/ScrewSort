@@ -572,13 +572,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelController: {fileID: 1943911444}
-  currentLevelId: 9
-  levelName: Level 9
-  levelTime: 10
+  currentLevelId: 14
+  levelName: Level 14
+  levelTime: 60
   boltSetups:
-  - screwIds: 0100000001000000
-  - screwIds: 0100000001000000
-  - screwIds: 01000000
+  - screwIds: 0100000002000000010000000200000003000000
+  - screwIds: 0100000002000000010000000200000003000000
+  - screwIds: 0100000002000000010000000200000003000000
 --- !u!1 &142519109
 GameObject:
   m_ObjectHideFlags: 0
@@ -2676,7 +2676,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -3192,7 +3192,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 199, y: -227}
+  m_AnchoredPosition: {x: 199, y: -212}
   m_SizeDelta: {x: 190.5, y: 204}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &815332267
@@ -3491,7 +3491,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 00:30
+  m_text: 01:00
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -10708,7 +10708,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2117770492
 RectTransform:
   m_ObjectHideFlags: 0

@@ -96,10 +96,11 @@ public class ScrewMover : MonoBehaviour
         // Sử dụng postBolt nếu có
         if (screwIndex >= 0 && screwIndex < bolt.postBolts.Count && bolt.postBolts[screwIndex] != null)
         {
-            return bolt.postBolts[screwIndex].transform.position;
+            // ✅ Dịch ốc sang trái 0.05 đơn vị và lùi đằng sau 0.05 đơn vị so với đinh
+            return bolt.postBolts[screwIndex].transform.position + new Vector3(-0.05f, 0f, 0.05f);
         }
 
         // Fallback: tính toán dựa trên bolt base
-        return bolt.transform.position + Vector3.up * (screwIndex * 0.3f + 0.2f);
+        return bolt.transform.position + Vector3.up * (screwIndex * 0.3f + 0.2f) + new Vector3(-0.05f, 0f, 0.05f);
     }
 }

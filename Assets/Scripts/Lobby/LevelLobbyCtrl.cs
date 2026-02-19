@@ -3,23 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+
 public class LevelLobbyCtrl : MonoBehaviour
 {
-    public GameObject panelAllLevel;
+    [Header("Map Navigation")]
+    public MapNavigationCtrl mapNavigationCtrl; // Quản lý điều hướng giữa các map
+    
+    [Header("UI Buttons")]
     public Button btnShowAllLevel;
-    public Button btnCloseAllLevel;
+    // ❌ Xóa btnCloseAllLevel (đã chuyển sang MapNavigationCtrl)
     
     private LevelButton[] allLevelButtons; // 🔒 Cache tất cả level buttons
+    private int lastPlayedLevel = 1; // Level cuối cùng đã chơi
     
     public void Start()
     {
         if (btnShowAllLevel != null)
         {
             btnShowAllLevel.onClick.AddListener(ShowAllLevel);
-        }
-        if (btnCloseAllLevel != null)
-        {
-            btnCloseAllLevel.onClick.AddListener(CloseAllLevel);
         }
         
         // 🔒 Tìm tất cả level buttons trong scene
@@ -28,31 +29,29 @@ public class LevelLobbyCtrl : MonoBehaviour
         // 🔒 Refresh trạng thái lock/unlock khi vào lobby
         RefreshAllLevelButtons();
         
-        Debug.Log($"🎮 Lobby initialized với {allLevelButtons.Length} level buttons");
+        // Tải level cuối cùng đã chơi từ PlayerPrefs
+        lastPlayedLevel = PlayerPrefs.GetInt("CurrentLevel", 1);
+        
+        Debug.Log($"🎮 Lobby initialized với {allLevelButtons.Length} level buttons, hiện tại ở level {lastPlayedLevel}");
     }
     
     public void ShowAllLevel()
     {
-        if (panelAllLevel != null)
+        if (mapNavigationCtrl != null)
         {
-            panelAllLevel.SetActive(true);
-            panelAllLevel.transform.localScale = Vector3.one * 0.95f;
-            panelAllLevel.transform.DOScale(1f, 0.95f).SetEase(Ease.OutBack);
+            // ✨ Hiển thị map + bật các nút navigation
+            mapNavigationCtrl.ShowMapForLevel(lastPlayedLevel);
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ MapNavigationCtrl chưa được gán!");
         }
         
         // 🔒 Refresh lại trạng thái khi mở panel (phòng trường hợp unlock level mới)
         RefreshAllLevelButtons();
     }
     
-    public void CloseAllLevel()
-    {
-        if (panelAllLevel != null)
-        {
-            panelAllLevel.transform.DOScale(0.95f, 0.3f).SetEase(Ease.InBack).OnComplete(() => {
-                panelAllLevel.SetActive(false);
-            });
-        }
-    }
+    // ❌ Xóa method CloseAllLevel (đã chuyển sang MapNavigationCtrl.CloseAllMaps)
     
     /// <summary>
     /// 🔒 Refresh trạng thái lock/unlock của tất cả level buttons
@@ -73,5 +72,17 @@ public class LevelLobbyCtrl : MonoBehaviour
         }
         
         Debug.Log($"🔄 Đã refresh {allLevelButtons.Length} level buttons");
+    }
+    
+    /// <summary>
+    /// Cập nhật level hiện tại (gọi từ LevelButton khi chọn level)
+    /// </summary>
+    public void UpdateCurrentLevel(int levelId)
+    {
+        lastPlayedLevel = levelId;
+        PlayerPrefs.SetInt("CurrentLevel", levelId);
+        PlayerPrefs.Save();
+        
+        Debug.Log($"📍 Cập nhật level hiện tại: {levelId}");
     }
 }

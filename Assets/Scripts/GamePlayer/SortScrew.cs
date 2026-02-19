@@ -169,9 +169,10 @@ public class SortScrew : MonoBehaviour
     {
         if (bolt?.postBolts != null && index >= 0 && index < bolt.postBolts.Count)
         {
-            return bolt.postBolts[index].transform.position;
+            // ✅ Dịch ốc sang trái 0.05 đơn vị và lùi đằng sau 0.05 đơn vị so với đinh
+            return bolt.postBolts[index].transform.position + new Vector3(-0.05f, 0f, 0.05f);
         }
-        return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f);
+        return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f) + new Vector3(-0.05f, 0f, 0.05f);
     }
 
     // Public methods
