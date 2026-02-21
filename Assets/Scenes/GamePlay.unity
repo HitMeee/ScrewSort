@@ -1137,6 +1137,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 308929549}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &214037138
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 214037140}
+  - component: {fileID: 214037139}
+  m_Layer: 0
+  m_Name: CoinFlyEffectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &214037139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 214037138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 431657eaffdc5a64eab89bb6ea666318, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coinPrefab: {fileID: 3463295641010629291, guid: d4b8b4c8838f95442a597067bef6fd5b, type: 3}
+  coinSpawnPoint: {fileID: 2095507154}
+  coinTargetPosition: {fileID: 1894216281}
+  numberOfCoins: 10
+  spreadRadius: 150
+  explosionDuration: 0.5
+  flyDuration: 0.8
+  delayBetweenCoins: 0.05
+  flyEase: 26
+--- !u!4 &214037140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 214037138}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 192.58867, y: 1450.8602, z: -17.45034}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &228947484
 GameObject:
   m_ObjectHideFlags: 0
@@ -2035,6 +2088,7 @@ MonoBehaviour:
   star3: {fileID: 1545791783}
   rewardText: {fileID: 841939209}
   ClosePoppup: {fileID: 1127479711}
+  coinFlyEffect: {fileID: 214037139}
   buyToolUI: {fileID: 1544930102}
   closeBuyButton: {fileID: 2098555893}
   backBuyButton: {fileID: 1992944771}
@@ -10708,7 +10762,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2117770492
 RectTransform:
   m_ObjectHideFlags: 0
@@ -10779,3 +10833,4 @@ SceneRoots:
   - {fileID: 1122375472}
   - {fileID: 380327333}
   - {fileID: 1603173962}
+  - {fileID: 214037140}

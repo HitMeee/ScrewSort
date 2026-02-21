@@ -21,7 +21,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject star2;
     [SerializeField] private GameObject star3;
     [SerializeField] private TextMeshProUGUI rewardText;
-    [SerializeField] private Button ClosePoppup; // Text hiển thị +30, +45, +60
+    [SerializeField] private Button ClosePoppup;
+    [SerializeField] private CoinFlyEffect coinFlyEffect; // ✅ Hiệu ứng coin bay
 
     [Header("🛒 Buy Tool UI")]
     [SerializeField] private GameObject buyToolUI;
@@ -211,13 +212,38 @@ public class UIManager : MonoBehaviour
         {
             SoundManager.Instance.PlayButtonClick();
         }
+        nextButton.interactable = false; 
+        ClosePoppup.interactable = false;
 
-        // Tính coin reward theo số sao
-        coinManager.AddLevelReward(currentStars);
-        completeUI.SetActive(false);
+        // ✅ CHẠY HIỆU ỨNG COIN BAY
+        if (coinFlyEffect != null)
+        {
+            coinFlyEffect.PlayCoinFlyEffect();
+            
+            // Delay để chờ coin bay xong rồi mới thực hiện logic tiếp
+            float totalDelay = coinFlyEffect.GetTotalAnimationTime();
+            DOVirtual.DelayedCall(totalDelay, () =>
+            {
+                // Tính coin reward theo số sao
+                coinManager.AddLevelReward(currentStars);
+                completeUI.SetActive(false);
 
-        var gameScene = FindObjectOfType<GameScene>();
-        gameScene.LoadNextLevel();
+                var gameScene = FindObjectOfType<GameScene>();
+                gameScene.LoadNextLevel();
+            });
+        }
+        else
+        {
+            // Nếu không có effect thì chạy logic cũ
+            coinManager.AddLevelReward(currentStars);
+            completeUI.SetActive(false);
+
+            nextButton.interactable = true;
+            ClosePoppup.interactable = true;// Reset trạng thái button cho lần sau
+
+            var gameScene = FindObjectOfType<GameScene>();
+            gameScene.LoadNextLevel();
+        }
     }
 
     // ===== BUY TOOL UI =====
