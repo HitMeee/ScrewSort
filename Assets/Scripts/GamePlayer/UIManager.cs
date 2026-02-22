@@ -131,6 +131,8 @@ public class UIManager : MonoBehaviour
 
     public void ShowComplete(int stars = 1)
     {
+        nextButton.interactable = true; // Đảm bảo nút Next có thể nhấn được khi hiển thị popup
+        ClosePoppup.interactable = true; // Đảm bảo nút Close có thể
         // Lưu số sao để tính coin reward sau
         currentStars = stars;
         

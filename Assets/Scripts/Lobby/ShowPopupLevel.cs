@@ -11,6 +11,7 @@ public class ShowPopupLevel : MonoBehaviour
     public Button btnClosePopup; // Nút đóng popup
     public Button btnShowPopup; // Nút hiển thị popup
     public Button btnPlay;
+    public GameObject PanelBlack;
 
     private int selectedLevelId = 1; // Level được chọn
 
@@ -35,6 +36,7 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void ShowPopup()
     {
+        PanelBlack.SetActive(true);
         if (popupPanel != null)
         {
             popupPanel.SetActive(true);
@@ -52,6 +54,7 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void ClosePopup()
     {
+        PanelBlack.SetActive(false);
         if (popupPanel != null)
         {
             popupPanel.transform.DOScale(0.5f, 0.5f).SetEase(Ease.InBack)
@@ -60,13 +63,20 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void PlayGame()
     {
-        // 🎮 Set mode = Selected (chơi level tự chọn, KHÔNG ảnh hưởng tiến độ)
-        LevelFileManager.SetPlayMode(LevelFileManager.PlayMode.Selected, selectedLevelId);
+        // ✅ ĐÓNG POPUP TRƯỚC (với animation)
+        ClosePopup();
 
-        Debug.Log($"▶️ Chơi LEVEL TỰ CHỌN - Level {selectedLevelId} (không ảnh hưởng tiến độ)");
-        // Chuyển sang scene GamePlay
-        SceneManager.LoadScene("GamePlay");
+        // ✅ CHỜ ANIMATION ĐÓNG XONG RỒI MỚI CHUYỂN SCENE
+        DOVirtual.DelayedCall(0.5f, () =>
+        {
+            // 🎮 Set mode = Selected
+            LevelFileManager.SetPlayMode(LevelFileManager.PlayMode.Selected, selectedLevelId);
+
+            Debug.Log($"▶️ Chơi LEVEL TỰ CHỌN - Level {selectedLevelId}");
+
+            // Chuyển sang scene GamePlay
+            SceneManager.LoadScene("GamePlay");
+        });
     }
-
 
 }

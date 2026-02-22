@@ -29,8 +29,16 @@ public class PlayGame : MonoBehaviour
         
         Debug.Log($"▶️ Chơi TIẾN ĐỘ CHÍNH - Level {progressLevel}");
         
-        // Load game scene
-        SceneManager.LoadScene("GamePlay");
+        // ✅ SỬ DỤNG SCENE TRANSITION
+        if (SceneTransition.Instance != null)
+        {
+            SceneTransition.Instance.LoadSceneWithFade("GamePlay");
+        }
+        else
+        {
+            // Fallback nếu không có SceneTransition
+            SceneManager.LoadScene("GamePlay");
+        }
     }
     public void UpdateTMPLevel()
     {

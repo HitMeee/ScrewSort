@@ -1526,9 +1526,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 8
-  button: {fileID: 243381404}
   popupController: {fileID: 76084555}
-  levelText: {fileID: 0}
   lockObject: {fileID: 886224194}
 --- !u!114 &76084557
 MonoBehaviour:
@@ -4628,9 +4626,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 5
-  button: {fileID: 668566461}
   popupController: {fileID: 325706674}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1047244065}
 --- !u!114 &325706676
 MonoBehaviour:
@@ -6381,7 +6377,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &534926429
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6971,9 +6967,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 1
-  button: {fileID: 1688295867}
   popupController: {fileID: 548569073}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1020298931}
 --- !u!114 &548569075
 MonoBehaviour:
@@ -7702,6 +7696,81 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 625044274}
+  m_CullTransparentMesh: 1
+--- !u!1 &643841750
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 643841751}
+  - component: {fileID: 643841753}
+  - component: {fileID: 643841752}
+  m_Layer: 5
+  m_Name: BackGroundBlack
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &643841751
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 643841750}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1652900877}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &643841752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 643841750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.9019608}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &643841753
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 643841750}
   m_CullTransparentMesh: 1
 --- !u!1 &652434573
 GameObject:
@@ -8978,9 +9047,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 18
-  button: {fileID: 977253505}
   popupController: {fileID: 796288510}
-  levelText: {fileID: 0}
   lockObject: {fileID: 225860350}
 --- !u!114 &796288510
 MonoBehaviour:
@@ -9785,9 +9852,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 15
-  button: {fileID: 590690757}
   popupController: {fileID: 860465166}
-  levelText: {fileID: 0}
   lockObject: {fileID: 784129244}
 --- !u!114 &860465166
 MonoBehaviour:
@@ -10733,9 +10798,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 17
-  button: {fileID: 723939309}
   popupController: {fileID: 931112225}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1894475541}
 --- !u!114 &931112225
 MonoBehaviour:
@@ -11083,9 +11146,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 6
-  button: {fileID: 132924103}
   popupController: {fileID: 953703447}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1627019503}
 --- !u!114 &953703449
 MonoBehaviour:
@@ -11585,9 +11646,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 11
-  button: {fileID: 1791416120}
   popupController: {fileID: 980757669}
-  levelText: {fileID: 0}
   lockObject: {fileID: 652434573}
 --- !u!114 &980757669
 MonoBehaviour:
@@ -11935,9 +11994,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 16
-  button: {fileID: 1223729471}
   popupController: {fileID: 998111428}
-  levelText: {fileID: 0}
   lockObject: {fileID: 100299407}
 --- !u!114 &998111428
 MonoBehaviour:
@@ -12312,9 +12369,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 2
-  button: {fileID: 143486891}
   popupController: {fileID: 1005751561}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1377306156}
 --- !u!114 &1005751563
 MonoBehaviour:
@@ -13356,9 +13411,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 14
-  button: {fileID: 228818485}
   popupController: {fileID: 1090728879}
-  levelText: {fileID: 0}
   lockObject: {fileID: 447700480}
 --- !u!114 &1090728879
 MonoBehaviour:
@@ -13528,9 +13581,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 13
-  button: {fileID: 1421482703}
   popupController: {fileID: 1091837265}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1000445099}
 --- !u!114 &1091837265
 MonoBehaviour:
@@ -18528,9 +18579,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 3
-  button: {fileID: 1489944383}
   popupController: {fileID: 1449003513}
-  levelText: {fileID: 0}
   lockObject: {fileID: 416318831}
 --- !u!114 &1449003515
 MonoBehaviour:
@@ -20036,9 +20085,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 7
-  button: {fileID: 988301963}
   popupController: {fileID: 1539836994}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1503267195}
 --- !u!114 &1539836996
 MonoBehaviour:
@@ -20773,9 +20820,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 4
-  button: {fileID: 877202813}
   popupController: {fileID: 1594071881}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1366498317}
 --- !u!114 &1594071883
 MonoBehaviour:
@@ -21114,9 +21159,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 12
-  button: {fileID: 1134361206}
   popupController: {fileID: 1615180057}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1115389106}
 --- !u!114 &1615180057
 MonoBehaviour:
@@ -21933,6 +21976,7 @@ RectTransform:
   - {fileID: 1617358533}
   - {fileID: 150044239}
   - {fileID: 1861239554}
+  - {fileID: 643841751}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -22902,9 +22946,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 10
-  button: {fileID: 1075796215}
   popupController: {fileID: 1724263491}
-  levelText: {fileID: 0}
   lockObject: {fileID: 1261829092}
 --- !u!114 &1724263491
 MonoBehaviour:
@@ -23158,9 +23200,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelId: 9
-  button: {fileID: 1105299833}
   popupController: {fileID: 1725921434}
-  levelText: {fileID: 0}
   lockObject: {fileID: 2017149663}
 --- !u!114 &1725921436
 MonoBehaviour:
