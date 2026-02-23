@@ -6,8 +6,8 @@ using DG.Tweening;
 
 public class ScrewMover : MonoBehaviour
 {
-    public float moveDuration = 0.3f;
-    public float delayBetweenScrews = 0.1f;
+    public float moveDuration = 0.1f; // Giảm từ 0.3f để nhanh hơn
+    public float delayBetweenScrews = 0.01f; // Giảm từ 0.1f
 
     // Thả screw về vị trí gốc
     public void DropBack(ScrewBase screw, Action onComplete = null)

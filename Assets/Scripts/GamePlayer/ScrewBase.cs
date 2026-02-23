@@ -13,7 +13,7 @@ public class ScrewBase : MonoBehaviour
 
     // ✅ THÊM: Độ cao nâng đồng nhất cho tất cả screws
     [Header("Lift Settings")]
-    public static float UNIFORM_LIFT_HEIGHT = 2.0f; // Độ cao cố định từ mặt đất
+    public static float UNIFORM_LIFT_HEIGHT = 1.3f; // Độ cao cố định từ mặt đất
 
     public void Init(int id)
     {
@@ -52,7 +52,7 @@ public class ScrewBase : MonoBehaviour
             });
     }
 
-    // ✅ SỬA: Thêm âm thanh khi di chuyển screw
+    // ✅ SỬA: Di chuyển 2 bước - Ngang (x,z) → Xuống (y)
     public void MoveTo(Vector3 targetPosition, float duration, System.Action onComplete = null)
     {
         transform.DOKill();
@@ -63,21 +63,33 @@ public class ScrewBase : MonoBehaviour
             SoundManager.Instance.PlayScrewMove();
         }
 
-        transform.DOMove(targetPosition, duration)
-            .SetEase(Ease.InOutQuart)
-            .OnComplete(() =>
-            {
-                originalPosition = targetPosition;
-                isLifted = false;
+        Vector3 currentPos = transform.position;
+        
+        // Bước 1: Di chuyển ngang (x,z) - giữ nguyên y hiện tại
+        Vector3 horizontalPos = new Vector3(targetPosition.x, currentPos.y, targetPosition.z);
+        
+        // Bước 2: Hạ xuống (y)
+        Vector3 finalPos = targetPosition;
 
-                // ✅ PHÁT ÂM THANH KHI ĐẶT XUỐNG
-                if (SoundManager.Instance != null)
-                {
-                    SoundManager.Instance.PlayScrewPlace();
-                }
+        // Tạo Sequence 2 bước
+        float halfDuration = duration / 2f;
+        Sequence moveSequence = DOTween.Sequence();
+        
+        moveSequence.Append(transform.DOMove(horizontalPos, halfDuration).SetEase(Ease.InOutQuad))  // Ngang
+                    .Append(transform.DOMove(finalPos, halfDuration).SetEase(Ease.InQuad))          // Xuống
+                    .OnComplete(() =>
+                    {
+                        originalPosition = targetPosition;
+                        isLifted = false;
 
-                onComplete?.Invoke();
-            });
+                        // ✅ PHÁT ÂM THANH KHI ĐẶT XUỐNG
+                        if (SoundManager.Instance != null)
+                        {
+                            SoundManager.Instance.PlayScrewPlace();
+                        }
+
+                        onComplete?.Invoke();
+                    });
     }
 
     // ✅ SỬA: Thêm âm thanh khi drop screw

@@ -54,11 +54,14 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void ClosePopup()
     {
-        PanelBlack.SetActive(false);
+        
         if (popupPanel != null)
         {
             popupPanel.transform.DOScale(0.5f, 0.5f).SetEase(Ease.InBack)
-                .OnComplete(() => popupPanel.SetActive(false));
+                .OnComplete(() => {
+                    popupPanel.SetActive(false);
+                    PanelBlack.SetActive(false);
+                });
         }
     }
     public void PlayGame()

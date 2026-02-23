@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class BoltLogicManager : MonoBehaviour
 {
-    public float moveDuration = 0.2f;
+    public float moveDuration = 0.1f; // Giảm từ 0.2f
     public float uniformLiftHeight = 1.5f;
-    public float liftDuration = 0.4f;
+    public float liftDuration = 0.2f; // Giảm từ 0.4f để nhanh hơn
     public List<BotlBase> allBolts;
 
     // State

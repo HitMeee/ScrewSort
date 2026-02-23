@@ -120,9 +120,11 @@ public class SortScrew : MonoBehaviour
         return count;
     }
 
-    // ✅ MỚI: Thực hiện di chuyển với delay 0.1s giữa các screw
+    // ✅ SỬA: Thực hiện di chuyển từng ốc với animation 3 bước: Lên → Ngang → Xuống
     private IEnumerator ExecuteMoveWithDelay(BotlBase source, BotlBase target, int count, int screwId)
     {
+        var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
+        
         for (int i = 0; i < count; i++)
         {
             var screw = source.GetTopScrew();
@@ -130,6 +132,16 @@ public class SortScrew : MonoBehaviour
 
             // Lưu scale gốc
             Vector3 originalScale = screw.transform.localScale;
+
+            // ✅ BƯỚC 1: Nâng ốc lên (nếu chưa lifted)
+            if (!screw.isLifted && boltManager != null)
+            {
+                bool liftCompleted = false;
+                screw.LiftUp(boltManager.uniformLiftHeight, boltManager.liftDuration, () => {
+                    liftCompleted = true;
+                });
+                yield return new WaitUntil(() => liftCompleted);
+            }
 
             // Cập nhật data
             source.RemoveScrew(screw);
@@ -139,7 +151,7 @@ public class SortScrew : MonoBehaviour
             // Khôi phục scale
             screw.transform.localScale = originalScale;
 
-            // Animation
+            // ✅ BƯỚC 2 & 3: Di chuyển ngang → xuống (đã có trong MoveTo)
             Vector3 pos = GetPosition(target, target.screwBases.Count - 1);
 
             bool moveCompleted = false;
@@ -155,10 +167,10 @@ public class SortScrew : MonoBehaviour
             // Đợi animation hoàn thành
             yield return new WaitUntil(() => moveCompleted);
 
-            // ✅ Delay 0.1s giữa các screw (trừ screw cuối cùng)
+            // ✅ Delay giữa các ốc (trừ ốc cuối cùng)
             if (i < count - 1)
             {
-                yield return new WaitForSeconds(0.02f);
+                yield return new WaitForSeconds(0.01f); // Giảm từ 0.02f để nhanh hơn
             }
         }
     }

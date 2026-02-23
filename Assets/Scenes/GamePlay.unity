@@ -785,8 +785,14 @@ MonoBehaviour:
   levelName: Default Level 1
   levelTime: 60
   boltSetups:
-  - screwIds: 01000000010000000100000001000000
   - screwIds: 01000000
+  - screwIds: 01000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 0100000001000000010000000100000001000000
 --- !u!1 &142519109
 GameObject:
   m_ObjectHideFlags: 0
@@ -1538,7 +1544,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -50, y: -39}
+  m_AnchoredPosition: {x: -55, y: -44}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &288409086
@@ -2119,8 +2125,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -701781429, guid: df1eb9dc47b28a94a90b9d15a4c1686d, type: 3}
-  m_Type: 1
+  m_Sprite: {fileID: 1472636092, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2771,7 +2777,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveDuration: 0.2
-  uniformLiftHeight: 1.5
+  uniformLiftHeight: 0.2
   liftDuration: 0.4
   allBolts: []
 --- !u!4 &591519392
@@ -2862,7 +2868,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -11, y: -37}
+  m_AnchoredPosition: {x: -68, y: -47}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &655396310
@@ -6648,7 +6654,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 418393589, guid: df1eb9dc47b28a94a90b9d15a4c1686d, type: 3}
+  m_Sprite: {fileID: -2052118118, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -7307,7 +7313,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1931755838, guid: df1eb9dc47b28a94a90b9d15a4c1686d, type: 3}
+  m_Sprite: {fileID: -999095422, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8552,12 +8558,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sfxSource: {fileID: 1603173963}
-  screwLiftSound: {fileID: 8300000, guid: c3e42c373f4742e44baeb6a2324bc338, type: 3}
-  screwDropSound: {fileID: 8300000, guid: c3e42c373f4742e44baeb6a2324bc338, type: 3}
+  screwLiftSound: {fileID: 8300000, guid: cd5cc25328f8cc5489c43bb6f3591531, type: 3}
+  screwDropSound: {fileID: 8300000, guid: 37d8105a34b47d4418d0744b3a37f0e3, type: 3}
   screwMoveSound: {fileID: 8300000, guid: cf6c47f2a71afda47ad27b0d18de3f7c, type: 3}
   screwPlaceSound: {fileID: 0}
-  buttonClickSound: {fileID: 8300000, guid: c3e42c373f4742e44baeb6a2324bc338, type: 3}
-  levelCompleteSound: {fileID: 8300000, guid: 0b7a162948a428a4eb8def04973c2385, type: 3}
+  buttonClickSound: {fileID: 8300000, guid: 44c030cef3914974eba625323c5f2e8e, type: 3}
+  levelCompleteSound: {fileID: 8300000, guid: 17d8cfe283693ac4ab504faee4fc85c1, type: 3}
   boltCompleteSound: {fileID: 8300000, guid: acbd34e70b1c3df4887ba80fb1fc5fe0, type: 3}
   sfxVolume: 0.7
 --- !u!4 &1603173962
@@ -8585,7 +8591,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 316c5e43eec0f044b99fd61a07a4cfbd, type: 3}
+  m_audioClip: {fileID: 8300000, guid: a726a8299fd2241449c771a4f89a82cc, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
