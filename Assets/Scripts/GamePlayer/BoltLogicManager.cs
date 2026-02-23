@@ -77,7 +77,7 @@ public class BoltLogicManager : MonoBehaviour
                 yield return new WaitUntil(() => !isAnimating);
                 
                 // ✅ Delay nhỏ giữa các action để mượt mà
-                yield return new WaitForSeconds(0.03f);
+                yield return new WaitForSeconds(0.01f);
             }
         }
 

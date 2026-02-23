@@ -10838,7 +10838,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boltLogicManager: {fileID: 591519391}
-  clickCooldown: 0.1
+  clickCooldown: 0.01
 --- !u!1 &2054533013
 GameObject:
   m_ObjectHideFlags: 0
