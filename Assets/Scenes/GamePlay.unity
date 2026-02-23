@@ -787,12 +787,10 @@ MonoBehaviour:
   boltSetups:
   - screwIds: 01000000
   - screwIds: 01000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
-  - screwIds: 0100000001000000010000000100000001000000
+  - screwIds: 02000000020000000200000002000000
+  - screwIds: 02000000
+  - screwIds: 03000000030000000300000003000000
+  - screwIds: 03000000
 --- !u!1 &142519109
 GameObject:
   m_ObjectHideFlags: 0
@@ -2582,7 +2580,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 556605531}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -2779,6 +2777,7 @@ MonoBehaviour:
   moveDuration: 0.2
   uniformLiftHeight: 0.2
   liftDuration: 0.4
+  maxQueueSize: 5
   allBolts: []
 --- !u!4 &591519392
 Transform:
@@ -9843,7 +9842,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -8, y: 17}
+  m_AnchoredPosition: {x: -3, y: 24}
   m_SizeDelta: {x: 300, y: 173.2719}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1894216282
@@ -10089,8 +10088,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -302, y: -222}
-  m_SizeDelta: {x: 500, y: 300}
+  m_AnchoredPosition: {x: -282, y: -227}
+  m_SizeDelta: {x: 612, y: 889.19}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1910071410
 MonoBehaviour:
@@ -10105,15 +10104,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21960784, g: 0.21960784, b: 0.21960784, a: 0.9254902}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 2
+  m_Sprite: {fileID: 21300000, guid: c8f637fd2610d7b468e7904dbd614253, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -10174,8 +10173,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72401fdce7186df47a9a9e5d55b0d466, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveDuration: 0.2
-  delayBetweenScrews: 0.1
+  moveDuration: 0.1
+  delayBetweenScrews: 1.5
 --- !u!1 &1931237356
 GameObject:
   m_ObjectHideFlags: 0
