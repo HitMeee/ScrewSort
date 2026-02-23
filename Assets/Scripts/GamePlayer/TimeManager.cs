@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using TMPro;
-
+using DG.Tweening;
 public class TimeManager : MonoBehaviour
 {
     public static TimeManager Instance;
     [SerializeField] private GameObject panelLose; // Kéo UI Text vào đây
-
+    [SerializeField]private GameObject PanelBlack; // Kéo UI Text vào đây
     [Header("Giao diện")]
     [SerializeField] private TextMeshProUGUI timeText; // Kéo UI Text vào đây
 
@@ -128,7 +128,12 @@ public class TimeManager : MonoBehaviour
     {
         if (!win)
         {
+
+            SoundManager.Instance.PlayLoseSound();
+            PanelBlack.SetActive(true);
             panelLose.SetActive(true);
+            panelLose.transform.localScale = Vector3.zero;
+            panelLose.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
         }
     }
 }

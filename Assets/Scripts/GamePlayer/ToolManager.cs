@@ -79,6 +79,7 @@ public class ToolManager : MonoBehaviour
 
     public void OnToolClicked(int toolId)
     {
+        SoundManager.Instance.PlayButtonClick();
         ToolData tool = GetToolById(toolId);
         if (tool == null) return;
 

@@ -37,6 +37,7 @@ public class UIManager : MonoBehaviour
     [Header("💰 Not Enough Money UI")]
     [SerializeField] private GameObject notEnoughMoneyUI;
     [SerializeField] private Button notEnoughMoneyBackButton;
+    [SerializeField] private GameObject PanelBlack;
 
     private ToolData currentToolToBuy;
     private GameScene gameScene;
@@ -122,7 +123,7 @@ public class UIManager : MonoBehaviour
     {
         completeUI.SetActive(false);
         nextButton.onClick.AddListener(OnNext);
-        
+
         // Mặc định ẩn tất cả sao
         if (star1 != null) star1.SetActive(false);
         if (star2 != null) star2.SetActive(false);
@@ -131,32 +132,37 @@ public class UIManager : MonoBehaviour
 
     public void ShowComplete(int stars = 1)
     {
-        nextButton.interactable = true; // Đảm bảo nút Next có thể nhấn được khi hiển thị popup
-        ClosePoppup.interactable = true; // Đảm bảo nút Close có thể
-        // Lưu số sao để tính coin reward sau
-        currentStars = stars;
-        
-        // Hiển thị popup ngay lập tức
-        completeUI.SetActive(true);
-        
-        // Cập nhật reward text theo số sao
-        UpdateRewardText(stars);
-        
-        // Ẩn tất cả sao trước
-        if (star1 != null) star1.SetActive(false);
-        if (star2 != null) star2.SetActive(false);
-        if (star3 != null) star3.SetActive(false);
-        
-        // Bắt đầu coroutine để hiển thị sao với animation
-        StartCoroutine(ShowStarsWithAnimation(stars));
-        
-        Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+        if (completeUI != null)
+        {
+            nextButton.interactable = true; // Đảm bảo nút Next có thể nhấn được khi hiển thị popup
+            ClosePoppup.interactable = true; // Đảm bảo nút Close có thể
+                                             // Lưu số sao để tính coin reward sau
+            currentStars = stars;
+            PanelBlack.SetActive(true);
+            // Hiển thị popup ngay lập tức
+            completeUI.SetActive(true);
+            completeUI.transform.localScale = Vector3.zero;
+            completeUI.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
+
+            // Cập nhật reward text theo số sao
+            UpdateRewardText(stars);
+
+            // Ẩn tất cả sao trước
+            if (star1 != null) star1.SetActive(false);
+            if (star2 != null) star2.SetActive(false);
+            if (star3 != null) star3.SetActive(false);
+
+            // Bắt đầu coroutine để hiển thị sao với animation
+            StartCoroutine(ShowStarsWithAnimation(stars));
+
+            Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+        }
     }
-    
+
     private void UpdateRewardText(int stars)
     {
         if (rewardText == null) return;
-        
+
         int reward = 0;
         switch (stars)
         {
@@ -165,37 +171,37 @@ public class UIManager : MonoBehaviour
             case 3: reward = 60; break;
             default: reward = 30; break;
         }
-        
+
         rewardText.text = "+" + reward;
         Debug.Log($"💰 Cập nhật reward text: +{reward}");
     }
-    
+
     private IEnumerator ShowStarsWithAnimation(int stars)
     {
         // Delay 0.5s trước khi hiển thị sao
         yield return new WaitForSeconds(0.5f);
-        
+
         // Hiển thị Star 1 nếu có
         if (stars >= 1 && star1 != null)
         {
             star1.SetActive(true);
             star1.transform.localScale = Vector3.one * 0.3f;
             star1.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
-            
+
             // Delay nhỏ giữa các sao
             yield return new WaitForSeconds(0.2f);
         }
-        
+
         // Hiển thị Star 2 nếu có
         if (stars >= 2 && star2 != null)
         {
             star2.SetActive(true);
             star2.transform.localScale = Vector3.one * 0.3f;
             star2.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
-            
+
             yield return new WaitForSeconds(0.2f);
         }
-        
+
         // Hiển thị Star 3 nếu có
         if (stars >= 3 && star3 != null)
         {
@@ -203,25 +209,30 @@ public class UIManager : MonoBehaviour
             star3.transform.localScale = Vector3.one * 0.3f;
             star3.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
         }
-        
+
         Debug.Log($"✨ Đã hiển thị {stars} sao với animation");
     }
 
     private void OnNext()
     {
+        PanelBlack.SetActive(false);
         // ✅ PHÁT ÂM THANH BUTTON
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.PlayButtonClick();
         }
-        nextButton.interactable = false; 
+        DOVirtual.DelayedCall(0.8f, () =>
+        {
+            SoundManager.Instance.PlayCollectCoin();
+        });
+        nextButton.interactable = false;
         ClosePoppup.interactable = false;
 
         // ✅ CHẠY HIỆU ỨNG COIN BAY
         if (coinFlyEffect != null)
         {
             coinFlyEffect.PlayCoinFlyEffect();
-            
+
             // Delay để chờ coin bay xong rồi mới thực hiện logic tiếp
             float totalDelay = coinFlyEffect.GetTotalAnimationTime();
             DOVirtual.DelayedCall(totalDelay, () =>
@@ -266,18 +277,35 @@ public class UIManager : MonoBehaviour
         if (toolImageDisplay != null) toolImageDisplay.sprite = toolData.imageTools;
         if (priceText != null) priceText.text = toolData.price.ToString();
 
-        if (buyToolUI != null) buyToolUI.SetActive(true);
+        PanelBlack.SetActive(true);
+        if (buyToolUI != null)
+        {
+            buyToolUI.SetActive(true);
+            buyToolUI.transform.localScale = Vector3.zero;
+            buyToolUI.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        }
+        Time.timeScale = 0f;
     }
 
     public void HideBuyToolUI()
     {
-        if (buyToolUI != null) buyToolUI.SetActive(false);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
+        if (buyToolUI != null)
+        {
+            buyToolUI.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack)
+                .OnComplete(() => buyToolUI.SetActive(false));
+        }
+        PanelBlack.SetActive(false);
         currentToolToBuy = null;
+        Time.timeScale = 1f;
     }
 
     private void OnBuyTool()
     {
-        // ✅ PHÁT ÂM THANH BUTTON
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.PlayButtonClick();
@@ -312,7 +340,14 @@ public class UIManager : MonoBehaviour
 
         // ✅ ẨN BUY TOOL UI VÀ HIỆN NOT ENOUGH MONEY UI
         HideBuyToolUI();
-        notEnoughMoneyUI.SetActive(true);
+        PanelBlack.SetActive(true);
+        if (notEnoughMoneyUI != null)
+        {
+            notEnoughMoneyUI.SetActive(true);
+            notEnoughMoneyUI.transform.localScale = Vector3.zero;
+            notEnoughMoneyUI.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        }
+        Time.timeScale = 0f; // Tạm dừng game khi mở UI
 
         Debug.Log("💰 Showing not enough money UI");
     }
@@ -327,9 +362,11 @@ public class UIManager : MonoBehaviour
 
         if (notEnoughMoneyUI != null)
         {
-            notEnoughMoneyUI.SetActive(false);
+            PanelBlack.SetActive(false);
+            notEnoughMoneyUI.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack).SetUpdate(true)
+                .OnComplete(() => notEnoughMoneyUI.SetActive(false));
         }
-
+        Time.timeScale = 1f; // Resume game when closing UI
         Debug.Log("💰 Hidden not enough money UI");
     }
 
