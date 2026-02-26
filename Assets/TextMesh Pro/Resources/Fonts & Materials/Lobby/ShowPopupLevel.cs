@@ -36,6 +36,7 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void ShowPopup()
     {
+        SoundManager.Instance.PlayButtonClick();
         PanelBlack.SetActive(true);
         if (popupPanel != null)
         {
@@ -54,7 +55,7 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void ClosePopup()
     {
-        
+        SoundManager.Instance.PlayButtonClick();
         if (popupPanel != null)
         {
             popupPanel.transform.DOScale(0.5f, 0.5f).SetEase(Ease.InBack)
@@ -66,6 +67,7 @@ public class ShowPopupLevel : MonoBehaviour
     }
     public void PlayGame()
     {
+        SoundManager.Instance.PlayButtonClick();
         // ✅ ĐÓNG POPUP TRƯỚC (với animation)
         ClosePopup();
 

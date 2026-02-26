@@ -300,6 +300,7 @@ public class UIManager : MonoBehaviour
                 .OnComplete(() => buyToolUI.SetActive(false));
         }
         PanelBlack.SetActive(false);
+        buyToolUI.SetActive(false);
         currentToolToBuy = null;
         Time.timeScale = 1f;
     }

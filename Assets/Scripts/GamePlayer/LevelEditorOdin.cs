@@ -22,9 +22,76 @@ public class LevelEditorOdin : MonoBehaviour
     [SerializeField] private float levelTime = 60f;
 
     [Space(10)]
+    [Title("🔍 Tìm Kiếm Level")]
+    [HorizontalGroup("Search", Width = 0.7f)]
+    [LabelText("Nhập Level ID")]
+    [SerializeField] private int searchLevelId = 1;
+
+    [Space(10)]
     [Title("🔧 Cấu Hình Bolt")]
     [TableList(AlwaysExpanded = true)]
     [SerializeField] private List<BoltSetup> boltSetups = new List<BoltSetup>();
+
+    #endregion
+
+    #region Search Functionality
+
+    [HorizontalGroup("Search", Width = 0.3f)]
+    [Button("🔍 Tìm Level", ButtonSizes.Large), GUIColor(0.3f, 0.7f, 0.9f)]
+    public void SearchLevel()
+    {
+        if (searchLevelId <= 0)
+        {
+            Debug.LogWarning("⚠️ Level ID phải lớn hơn 0!");
+            return;
+        }
+
+        var allIds = LevelFileManager.GetAllLevelIds();
+        
+        if (allIds.Contains(searchLevelId))
+        {
+            currentLevelId = searchLevelId;
+            LoadLevelDataOnly(currentLevelId);
+            Debug.Log($"✅ Đã tìm thấy và load Level {searchLevelId}: {levelName}");
+        }
+        else
+        {
+            Debug.LogWarning($"⚠️ Level {searchLevelId} không tồn tại! Các level có sẵn: {string.Join(", ", allIds)}");
+            
+            // Tùy chọn: Tạo level mới nếu muốn
+            if (GUILayout.Button($"Tạo Level {searchLevelId} mới?"))
+            {
+                CreateLevelById(searchLevelId);
+            }
+        }
+    }
+
+    [Button("📋 Xem Tất Cả Level", ButtonSizes.Medium), GUIColor(0.6f, 0.8f, 1f)]
+    public void ShowAllLevels()
+    {
+        var allIds = LevelFileManager.GetAllLevelIds();
+        
+        if (allIds.Count > 0)
+        {
+            Debug.Log($"📋 Tổng số level: {allIds.Count}");
+            Debug.Log($"📋 Danh sách: {string.Join(", ", allIds)}");
+            Debug.Log($"📋 Level đầu tiên: {allIds[0]}");
+            Debug.Log($"📋 Level cuối cùng: {allIds[allIds.Count - 1]}");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Chưa có level nào được tạo!");
+        }
+    }
+
+    private void CreateLevelById(int levelId)
+    {
+        currentLevelId = levelId;
+        searchLevelId = currentLevelId; // ✅ Cập nhật ô search
+        levelName = $"Level {levelId}";
+        CreateDefaultBoltSetups();
+        Debug.Log($"🆕 Đã tạo Level {levelId} mới");
+    }
 
     #endregion
 
@@ -69,7 +136,6 @@ public class LevelEditorOdin : MonoBehaviour
         if (success)
         {
             Debug.Log($"💾 Đã lưu Level {currentLevelId}: {levelName}");
-            // ✅ KHÔNG thay đổi CurrentLevelId - giữ nguyên level đang chơi
         }
         else
         {
@@ -81,7 +147,7 @@ public class LevelEditorOdin : MonoBehaviour
     [Button("Load Level", ButtonSizes.Large), GUIColor(0.2f, 0.6f, 0.8f)]
     public void LoadLevel()
     {
-        LoadAndApplyLevelData(currentLevelId); // ✅ SỬA: Áp dụng vào game scene
+        LoadAndApplyLevelData(currentLevelId);
     }
 
     #endregion
@@ -101,7 +167,8 @@ public class LevelEditorOdin : MonoBehaviour
             if (currentIndex > 0)
             {
                 currentLevelId = allIds[currentIndex - 1];
-                LoadLevelDataOnly(currentLevelId); // ✅ SỬA: Chỉ load data, không áp dụng scene
+                searchLevelId = currentLevelId; // ✅ Cập nhật ô search
+                LoadLevelDataOnly(currentLevelId);
                 Debug.Log($"⬅️ Đã chuyển Level {currentLevelId} (chỉ hiển thị data)");
             }
             else
@@ -128,7 +195,8 @@ public class LevelEditorOdin : MonoBehaviour
             if (currentIndex >= 0 && currentIndex < allIds.Count - 1)
             {
                 currentLevelId = allIds[currentIndex + 1];
-                LoadLevelDataOnly(currentLevelId); // ✅ SỬA: Chỉ load data, không áp dụng scene
+                searchLevelId = currentLevelId; // ✅ Cập nhật ô search
+                LoadLevelDataOnly(currentLevelId);
                 Debug.Log($"➡️ Đã chuyển Level {currentLevelId} (chỉ hiển thị data)");
             }
             else
@@ -150,6 +218,7 @@ public class LevelEditorOdin : MonoBehaviour
         int newId = allIds.Count > 0 ? allIds[allIds.Count - 1] + 1 : 1;
 
         currentLevelId = newId;
+        searchLevelId = currentLevelId; // ✅ Cập nhật ô search
         levelName = $"Level {newId}";
 
         CreateDefaultBoltSetups();
@@ -171,11 +240,11 @@ public class LevelEditorOdin : MonoBehaviour
     [Button("Reset to Level 1", ButtonSizes.Large), GUIColor(0.2f, 0.8f, 0.9f)]
     public void ResetToLevel1()
     {
-        // 🔄 Reset toàn bộ tiến độ
         LevelFileManager.ResetProgress();
-        
-        // 🔄 Set current level về 1
         LevelFileManager.SetCurrentLevelId(1);
+        
+        currentLevelId = 1;
+        searchLevelId = 1; // ✅ Cập nhật ô search
         
         Debug.Log("🔄 Đã reset về Level 1 - Chỉ mở Level 1, tất cả level khác bị khóa");
     }
@@ -192,6 +261,9 @@ public class LevelEditorOdin : MonoBehaviour
         {
             CreateDefaultBoltSetups();
         }
+        
+        // ✅ Đồng bộ searchLevelId với currentLevelId khi start
+        searchLevelId = currentLevelId;
     }
 
     #endregion
@@ -230,14 +302,12 @@ public class LevelEditorOdin : MonoBehaviour
         return true;
     }
 
-    // ✅ THÊM: Chỉ load data vào editor, KHÔNG áp dụng vào game scene
     private void LoadLevelDataOnly(int levelId)
     {
         var savedLevel = LevelFileManager.LoadLevel(levelId);
 
         if (savedLevel != null)
         {
-            // ✅ CHỈ load vào editor
             levelName = savedLevel.levelName;
             ConvertFromLevelData(savedLevel.levelData);
 
@@ -245,32 +315,26 @@ public class LevelEditorOdin : MonoBehaviour
         }
         else
         {
-            // Nếu level không tồn tại, tạo level trống
             levelName = $"Level {levelId}";
             CreateDefaultBoltSetups();
             Debug.LogWarning($"⚠️ Level {levelId} không tồn tại, tạo level mặc định");
         }
     }
 
-    // ✅ THÊM: Load data VÀ áp dụng vào game scene
     private void LoadAndApplyLevelData(int levelId)
     {
         var savedLevel = LevelFileManager.LoadLevel(levelId);
 
         if (savedLevel != null)
         {
-            // Load vào editor
             levelName = savedLevel.levelName;
             ConvertFromLevelData(savedLevel.levelData);
-
-            // ✅ ÁP DỤNG vào game để xem trước
             LevelFileManager.ApplyLevelToGame(savedLevel.levelData, levelId);
 
             Debug.Log($"🎮 Đã load và áp dụng Level {levelId}: {levelName} với {boltSetups.Count} bolts");
         }
         else
         {
-            // Nếu level không tồn tại, tạo level trống
             levelName = $"Level {levelId}";
             CreateDefaultBoltSetups();
             Debug.LogWarning($"⚠️ Level {levelId} không tồn tại, tạo level mặc định");
@@ -280,7 +344,7 @@ public class LevelEditorOdin : MonoBehaviour
     private LevelData ConvertToLevelData()
     {
         var levelData = new LevelData();
-        levelData.timeLimit = levelTime; // ✅ LƯU thời gian vào data
+        levelData.timeLimit = levelTime;
         
         levelData.lsDataBolt = new List<DataBolt>();
         for (int i = 0; i < boltSetups.Count; i++)
@@ -300,7 +364,7 @@ public class LevelEditorOdin : MonoBehaviour
 
         if (levelData != null)
         {
-            levelTime = levelData.timeLimit > 0 ? levelData.timeLimit : 60f; // ✅ LOAD thời gian, nếu = 0 thì lấy 60
+            levelTime = levelData.timeLimit > 0 ? levelData.timeLimit : 60f;
             
             if (levelData.lsDataBolt != null)
             {

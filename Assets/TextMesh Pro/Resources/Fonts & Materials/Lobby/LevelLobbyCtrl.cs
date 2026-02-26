@@ -11,7 +11,6 @@ public class LevelLobbyCtrl : MonoBehaviour
     
     [Header("UI Buttons")]
     public Button btnShowAllLevel;
-    // ❌ Xóa btnCloseAllLevel (đã chuyển sang MapNavigationCtrl)
     
     private LevelButton[] allLevelButtons; // 🔒 Cache tất cả level buttons
     private int lastPlayedLevel = 1; // Level cuối cùng đã chơi
@@ -37,9 +36,18 @@ public class LevelLobbyCtrl : MonoBehaviour
     
     public void ShowAllLevel()
     {
+        // ✅ THÊM NULL CHECK CHO SOUNDMANAGER
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ SoundManager.Instance is null!");
+        }
+        
         if (mapNavigationCtrl != null)
         {
-            // ✨ Hiển thị map + bật các nút navigation
             mapNavigationCtrl.ShowMapForLevel(lastPlayedLevel);
         }
         else
@@ -50,12 +58,7 @@ public class LevelLobbyCtrl : MonoBehaviour
         // 🔒 Refresh lại trạng thái khi mở panel (phòng trường hợp unlock level mới)
         RefreshAllLevelButtons();
     }
-    
-    // ❌ Xóa method CloseAllLevel (đã chuyển sang MapNavigationCtrl.CloseAllMaps)
-    
-    /// <summary>
-    /// 🔒 Refresh trạng thái lock/unlock của tất cả level buttons
-    /// </summary>
+
     public void RefreshAllLevelButtons()
     {
         if (allLevelButtons == null || allLevelButtons.Length == 0)
@@ -73,10 +76,7 @@ public class LevelLobbyCtrl : MonoBehaviour
         
         Debug.Log($"🔄 Đã refresh {allLevelButtons.Length} level buttons");
     }
-    
-    /// <summary>
-    /// Cập nhật level hiện tại (gọi từ LevelButton khi chọn level)
-    /// </summary>
+
     public void UpdateCurrentLevel(int levelId)
     {
         lastPlayedLevel = levelId;

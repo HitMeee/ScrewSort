@@ -21,6 +21,8 @@ public class PlayGame : MonoBehaviour
 
     public void OnPlayButtonClicked()
     {
+        SoundManager.Instance.PlayButtonClick();
+        
         // 🎯 Lấy level cao nhất cần chơi (tiến độ chính)
         int progressLevel = LevelFileManager.GetProgressLevelId();
         
