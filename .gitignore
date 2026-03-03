@@ -15,3 +15,6 @@ DOTweenPro.Scripts.csproj
 DOTweenPro.Scripts.Player.csproj
 LEVEL_LOCK_SETUP.md
 RESET_BUTTON_SETUP.md
+Unity.PlayerPrefsEditor.Editor.csproj
+Unity.PlayerPrefsEditor.EditorResources.csproj
+Unity.PlayerPrefsEditor.Samples.SampleScene.csproj
