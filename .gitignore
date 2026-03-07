@@ -18,3 +18,4 @@ RESET_BUTTON_SETUP.md
 Unity.PlayerPrefsEditor.Editor.csproj
 Unity.PlayerPrefsEditor.EditorResources.csproj
 Unity.PlayerPrefsEditor.Samples.SampleScene.csproj
+GoogleMobileAds.Editor.csproj

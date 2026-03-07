@@ -57,7 +57,7 @@ public class SoundManager : MonoBehaviour
 
     public void PlayLoseSound()
     {
-        PlaySFX(loseSound, "Lose Sound", 0.9f);
+        PlaySFX(loseSound, "Lose Sound", 2f);
     }
 
     private void InitializeAudioSources()
@@ -139,7 +139,7 @@ public class SoundManager : MonoBehaviour
 
     public void PlayLevelComplete()
     {
-        PlaySFX(levelCompleteSound, "Level Complete");
+        PlaySFX(levelCompleteSound, "Level Complete", 2f);
     }
 
     // BOLT COMPLETION SOUND (only for full 5-screw completion)

@@ -37,6 +37,7 @@ public class UIManager : MonoBehaviour
     [Header("💰 Not Enough Money UI")]
     [SerializeField] private GameObject notEnoughMoneyUI;
     [SerializeField] private Button notEnoughMoneyBackButton;
+    [SerializeField] private Button watchAdsButton;
     [SerializeField] private GameObject PanelBlack;
 
     private ToolData currentToolToBuy;
@@ -221,6 +222,13 @@ public class UIManager : MonoBehaviour
         {
             SoundManager.Instance.PlayButtonClick();
         }
+
+        // ✅ GỌI ADS FREQUENCY MANAGER KHI THẮNG
+        if (AdsFrequencyManager.Instance != null)
+        {
+            AdsFrequencyManager.Instance.OnLevelWin();
+        }
+
         DOVirtual.DelayedCall(0.8f, () =>
         {
             SoundManager.Instance.PlayCollectCoin();
@@ -333,6 +341,11 @@ public class UIManager : MonoBehaviour
         {
             notEnoughMoneyBackButton.onClick.AddListener(HideNotEnoughMoneyUI);
         }
+
+        if (watchAdsButton != null)
+        {
+            watchAdsButton.onClick.AddListener(OnWatchAds);
+        }
     }
 
     public void ShowNotEnoughMoneyUI()
@@ -369,6 +382,71 @@ public class UIManager : MonoBehaviour
         }
         Time.timeScale = 1f; // Resume game when closing UI
         Debug.Log("💰 Hidden not enough money UI");
+    }
+
+    // ===== 📺 WATCH ADS FOR COINS =====
+    private void OnWatchAds()
+    {
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
+        Debug.Log("📺 Người dùng nhấn Watch Ads");
+
+        // Tạm dừng time scale về 1 để ads có thể hiển thị
+        Time.timeScale = 1f;
+
+        // Gọi Rewarded Ad
+        if (AdsManager.Instance != null)
+        {
+            AdsManager.Instance.ShowRewardedAd((reward) =>
+            {
+                // Callback khi người dùng xem ads xong
+                Debug.Log($"✅ Người dùng đã xem ads! Nhận thưởng: {reward.Amount} {reward.Type}");
+
+                // Cộng 100 coin
+                if (coinManager != null)
+                {
+                    coinManager.AddCoins(100);
+                    Debug.Log("💰 Đã cộng 100 coin!");
+                }
+
+                // Ẩn popup Not Enough Money
+                HideNotEnoughMoneyUI();
+
+                // Có thể thử mua lại tool nếu đủ tiền
+                if (currentToolToBuy != null)
+                {
+                    var toolManager = FindObjectOfType<ToolManager>();
+                    if (toolManager != null && coinManager != null)
+                    {
+                        // Kiểm tra lại xem đã đủ tiền chưa
+                        if (coinManager.GetCoins() >= currentToolToBuy.price)
+                        {
+                            Debug.Log("✅ Đã đủ tiền! Hiển thị lại popup mua tool.");
+                            ShowBuyToolUI(currentToolToBuy);
+                        }
+                        else
+                        {
+                            Debug.Log("⚠️ Vẫn chưa đủ tiền để mua tool.");
+                        }
+                    }
+                }
+
+                // Resume time scale nếu không có UI nào hiển thị
+                if (!IsAnyUIActive())
+                {
+                    Time.timeScale = 1f;
+                }
+            });
+        }
+        else
+        {
+            Debug.LogError("❌ AdsManager không tồn tại!");
+            Time.timeScale = 0f; // Quay lại time scale 0 nếu không có ads
+        }
     }
 
     // ===== PUBLIC METHODS =====

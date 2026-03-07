@@ -128,6 +128,11 @@ public class TimeManager : MonoBehaviour
     {
         if (!win)
         {
+            // ✅ GỌI ADS KHI THUA
+            if (AdsFrequencyManager.Instance != null)
+            {
+                AdsFrequencyManager.Instance.OnLevelLose();
+            }
 
             SoundManager.Instance.PlayLoseSound();
             PanelBlack.SetActive(true);

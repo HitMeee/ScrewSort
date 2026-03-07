@@ -201,7 +201,15 @@ public class GameScene : MonoBehaviour
     // UI Button Methods
     public void OnReplayClicked() => ReloadCurrentLevel();
     public void OnNextClicked() => LoadNextLevel();
-    public void OnMenuClicked() => SceneManager.LoadScene(0);
+    public void OnMenuClicked()
+    {
+        // ✅ GỌI ADS KHI THOÁT VỀ MENU
+        if (AdsFrequencyManager.Instance != null)
+        {
+            AdsFrequencyManager.Instance.OnExitGameplay();
+        }
+        SceneManager.LoadScene(0);
+    }
 
     public void RestartFromLevel1()
     {
