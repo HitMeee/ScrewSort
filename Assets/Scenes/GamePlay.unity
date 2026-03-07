@@ -8458,7 +8458,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1544930103
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9963,14 +9963,14 @@ MonoBehaviour:
   - id: 1
     nameTools: UnDo
     titleTools: You can go back one move
-    imageTools: {fileID: 21300000, guid: 76a810daaed940749a8ea62656b9f35c, type: 3}
-    price: 300
+    imageTools: {fileID: 1472636092, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
+    price: 100
     currentCount: 5
   - id: 2
     nameTools: +Bolt
     titleTools: 'You can add a bolt '
-    imageTools: {fileID: 21300000, guid: 46c1f8bf88da44e48b51e0d6beae45d5, type: 3}
-    price: 400
+    imageTools: {fileID: -2052118118, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
+    price: 300
     currentCount: 5
   backStepButton: {fileID: 345904664}
   backStepCountText: {fileID: 1441720366}

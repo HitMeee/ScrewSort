@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
+using DG.Tweening;
 
 public class CoinManager : MonoBehaviour
 {
@@ -31,6 +32,35 @@ public class CoinManager : MonoBehaviour
         UpdateUI();
     }
 
+    /// <summary>
+    /// Thêm coin với hiệu ứng tăng dần (counter animation)
+    /// </summary>
+    public void AddCoinsWithAnimation(int amount, float duration = 1.5f)
+    {
+        int startValue = coins;
+        int targetValue = coins + amount;
+        if (targetValue < 0) targetValue = 0;
+
+        // Tăng giá trị thật ngay (để save)
+        coins = targetValue;
+        SaveCoins();
+
+        // Animation UI counter
+        DOTween.To(
+            () => startValue,
+            x => 
+            {
+                // Cập nhật UI từ từ
+                if (coinText != null)
+                    coinText.text = "" + Mathf.RoundToInt(x);
+            },
+            targetValue,
+            duration
+        ).SetEase(Ease.OutCubic);
+
+        Debug.Log($"💰 Coin tăng từ {startValue} → {targetValue} trong {duration}s");
+    }
+
     public void AddLevelReward(int stars = 1)
     {
         // Tính coin dựa trên số sao
@@ -52,7 +82,9 @@ public class CoinManager : MonoBehaviour
         }
         
         Debug.Log($"💰 Nhận {reward} coins cho {stars} sao");
-        AddCoins(reward);
+        
+        // ✅ SỬ DỤNG ANIMATION THAY VÌ CỘNG TRỰC TIẾP
+        AddCoinsWithAnimation(reward, 0.5f);
     }
 
     private void UpdateUI()

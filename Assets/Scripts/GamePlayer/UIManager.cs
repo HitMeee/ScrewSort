@@ -395,6 +395,9 @@ public class UIManager : MonoBehaviour
 
         Debug.Log("📺 Người dùng nhấn Watch Ads");
 
+        // ✅ ẨN POPUP NGAY KHI BẮT ĐẦU XEM ADS
+        HideNotEnoughMoneyUI();
+
         // Tạm dừng time scale về 1 để ads có thể hiển thị
         Time.timeScale = 1f;
 
@@ -403,18 +406,15 @@ public class UIManager : MonoBehaviour
         {
             AdsManager.Instance.ShowRewardedAd((reward) =>
             {
-                // Callback khi người dùng xem ads xong
-                Debug.Log($"✅ Người dùng đã xem ads! Nhận thưởng: {reward.Amount} {reward.Type}");
+                // ✅ Callback này CHỈ ĐƯỢC GỌI KHI NGƯỜI DÙNG ĐÓNG ADS
+                Debug.Log($"✅ Người dùng đã ĐÓNG ads! Nhận thưởng: {reward.Amount} {reward.Type}");
 
-                // Cộng 100 coin
+                // ✅ CỘNG COIN NGAY KHI ĐÓNG ADS (không cần delay nữa)
                 if (coinManager != null)
                 {
-                    coinManager.AddCoins(100);
-                    Debug.Log("💰 Đã cộng 100 coin!");
+                    coinManager.AddCoinsWithAnimation(100, 1.5f);
+                    Debug.Log("💰 Đang cộng 100 coin với animation!");
                 }
-
-                // Ẩn popup Not Enough Money
-                HideNotEnoughMoneyUI();
 
                 // Có thể thử mua lại tool nếu đủ tiền
                 if (currentToolToBuy != null)
@@ -422,16 +422,20 @@ public class UIManager : MonoBehaviour
                     var toolManager = FindObjectOfType<ToolManager>();
                     if (toolManager != null && coinManager != null)
                     {
-                        // Kiểm tra lại xem đã đủ tiền chưa
-                        if (coinManager.GetCoins() >= currentToolToBuy.price)
+                        // Delay nhỏ để người dùng nhìn thấy coin tăng
+                        DOVirtual.DelayedCall(0.5f, () =>
                         {
-                            Debug.Log("✅ Đã đủ tiền! Hiển thị lại popup mua tool.");
-                            ShowBuyToolUI(currentToolToBuy);
-                        }
-                        else
-                        {
-                            Debug.Log("⚠️ Vẫn chưa đủ tiền để mua tool.");
-                        }
+                            // Kiểm tra lại xem đã đủ tiền chưa
+                            if (coinManager.GetCoins() >= currentToolToBuy.price)
+                            {
+                                Debug.Log("✅ Đã đủ tiền! Hiển thị lại popup mua tool.");
+                                ShowBuyToolUI(currentToolToBuy);
+                            }
+                            else
+                            {
+                                Debug.Log("⚠️ Vẫn chưa đủ tiền để mua tool.");
+                            }
+                        });
                     }
                 }
 

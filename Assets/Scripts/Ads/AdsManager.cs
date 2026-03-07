@@ -16,6 +16,10 @@ public class AdsManager : MonoBehaviour
     private BannerView bannerView;
     private InterstitialAd interstitialAd;
     private RewardedAd rewardedAd;
+    
+    // Callback cho rewarded ad (gọi khi đóng ads)
+    private Action<Reward> rewardedAdCallback;
+    private bool hasEarnedReward = false;
 
     private void Awake()
     {
@@ -186,12 +190,24 @@ public class AdsManager : MonoBehaviour
             // Register event handlers
             rewardedAd.OnAdFullScreenContentClosed += () =>
             {
-                Debug.Log("Rewarded ad closed.");
+                Debug.Log("🚪 Rewarded ad CLOSED by user.");
+                
+                // ✅ CHỈ GỌI CALLBACK KHI NGƯỜI DÙNG ĐÓNG ADS (KHÔNG PHẢI KHI ADS VỀ 0)
+                if (hasEarnedReward && rewardedAdCallback != null)
+                {
+                    Debug.Log("✅ Gọi callback - Người dùng đã đóng ads!");
+                    rewardedAdCallback?.Invoke(new Reward() { Type = "coins", Amount = 100 });
+                    rewardedAdCallback = null; // Clear callback
+                }
+                
+                hasEarnedReward = false; // Reset flag
                 LoadRewardedAd(); // Reload for next time
             };
             rewardedAd.OnAdFullScreenContentFailed += (AdError error) =>
             {
                 Debug.LogError("Rewarded ad failed to show: " + error);
+                hasEarnedReward = false;
+                rewardedAdCallback = null;
                 LoadRewardedAd(); // Reload for next time
             };
         });
@@ -201,10 +217,16 @@ public class AdsManager : MonoBehaviour
     {
         if (rewardedAd != null && rewardedAd.CanShowAd())
         {
+            // Lưu callback để gọi khi đóng ads
+            rewardedAdCallback = onUserEarnedReward;
+            hasEarnedReward = false;
+            
             rewardedAd.Show((Reward reward) =>
             {
-                Debug.Log($"Rewarded ad granted reward: {reward.Amount} {reward.Type}");
-                onUserEarnedReward?.Invoke(reward);
+                // Callback này được gọi khi ads VỀ 0 (xem xong)
+                Debug.Log($"⏱️ Rewarded ad finished (về 0): {reward.Amount} {reward.Type}");
+                hasEarnedReward = true; // Đánh dấu đã kiếm được reward
+                // KHÔNG GỌI CALLBACK Ở ĐÂY - Đợi đến khi đóng ads
             });
         }
         else
