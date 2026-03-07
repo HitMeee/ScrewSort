@@ -414,6 +414,12 @@ public class UIManager : MonoBehaviour
                 {
                     coinManager.AddCoinsWithAnimation(100, 1.5f);
                     Debug.Log("💰 Đang cộng 100 coin với animation!");
+                    
+                    // ✅ PHÁT ÂM THANH COIN
+                    if (SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.PlayCollectCoin();
+                    }
                 }
 
                 // Có thể thử mua lại tool nếu đủ tiền
