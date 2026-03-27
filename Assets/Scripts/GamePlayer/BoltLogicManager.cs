@@ -5,9 +5,10 @@ using UnityEngine;
 
 public class BoltLogicManager : MonoBehaviour
 {
-    public float moveDuration = 0.2f;
+    public float moveDuration = 0.1f; // Giảm từ 0.2f
     public float uniformLiftHeight = 1.5f;
-    public float liftDuration = 0.4f;
+    public float liftDuration = 0.2f; // Giảm từ 0.4f để nhanh hơn
+    public int maxQueueSize = 5; // ✅ GIỚI HẠN số lượng click trong hàng đợi
     public List<BotlBase> allBolts;
 
     // State
@@ -15,7 +16,9 @@ public class BoltLogicManager : MonoBehaviour
     private BotlBase currentSourceBolt;
     private Queue<BotlBase> clickQueue = new Queue<BotlBase>();
     private bool isProcessing = false;
+    private bool isAnimating = false; // Track animation state để block input
     private Dictionary<BotlBase, bool> boltLockStatus = new Dictionary<BotlBase, bool>();
+    private HashSet<BotlBase> animatingBolts = new HashSet<BotlBase>(); // ✅ Track các bolt đang animate
 
     public void Init()
     {
@@ -34,9 +37,25 @@ public class BoltLogicManager : MonoBehaviour
 
     public void OnBoltClicked(BotlBase clickedBolt)
     {
+        // ✅ BLOCK CLICK VÀO BOLT ĐANG CÓ ANIMATION
+        if (animatingBolts.Contains(clickedBolt))
+        {
+            Debug.Log($"⏸️ Bolt {clickedBolt.name} đang có ốc di chuyển, vui lòng đợi! [animatingBolts count: {animatingBolts.Count}]");
+            return;
+        }
+        
+        // ✅ KIỂM TRA: Bolt hợp lệ
         if (clickedBolt == null || IsBoltLocked(clickedBolt) || clickQueue.Contains(clickedBolt))
             return;
+            
+        // ✅ GIỚI HẠN: Chỉ chấp nhận tối đa maxQueueSize clicks
+        if (clickQueue.Count >= maxQueueSize)
+        {
+            Debug.Log($"❌ Queue đầy! Đang xử lý {clickQueue.Count} clicks. Vui lòng đợi...");
+            return;
+        }
 
+        Debug.Log($"✅ Thêm bolt {clickedBolt.name} vào queue. Queue size: {clickQueue.Count + 1}");
         clickQueue.Enqueue(clickedBolt);
         if (!isProcessing)
             StartCoroutine(ProcessClickQueue());
@@ -51,8 +70,14 @@ public class BoltLogicManager : MonoBehaviour
             var bolt = clickQueue.Dequeue();
             if (bolt != null && !IsBoltLocked(bolt))
             {
+                // ✅ XỬ LÝ LOGIC của click
                 yield return ProcessBoltClick(bolt);
-                yield return new WaitForSeconds(0.1f);
+                
+                // ✅ QUAN TRỌNG: Đợi animation hoàn tất (isAnimating = false) trước khi xử lý click tiếp
+                yield return new WaitUntil(() => !isAnimating);
+                
+                // ✅ Delay nhỏ giữa các action để mượt mà
+                yield return new WaitForSeconds(0.01f);
             }
         }
 
@@ -110,12 +135,40 @@ public class BoltLogicManager : MonoBehaviour
         currentLiftedScrew = topScrew;
         currentSourceBolt = sourceBolt;
 
+        // ✅ KHÓA bolt khi bắt đầu lift
+        isAnimating = true;
+        animatingBolts.Add(sourceBolt);
+        Debug.Log($"🔒 KHÓA Bolt {sourceBolt.name} khi lift. AnimatingBolts: {animatingBolts.Count}");
+        
         yield return WaitForAnimation(topScrew.LiftUp, uniformLiftHeight, liftDuration);
+        
+        // ✅ MỞ KHÓA bolt sau khi lift xong (nhưng vẫn giữ isAnimating cho các action tiếp theo)
+        animatingBolts.Remove(sourceBolt);
+        Debug.Log($"🔓 MỞ KHÓA Bolt {sourceBolt.name} sau lift. AnimatingBolts: {animatingBolts.Count}");
+        isAnimating = false;
     }
 
     private IEnumerator DropScrew()
     {
+        BotlBase sourceBolt = currentSourceBolt;
+        
+        // ✅ KHÓA source bolt khi drop
+        isAnimating = true;
+        if (sourceBolt != null)
+        {
+            animatingBolts.Add(sourceBolt);
+            Debug.Log($"🔒 KHÓA Bolt {sourceBolt.name} khi drop. AnimatingBolts: {animatingBolts.Count}");
+        }
+        
         yield return WaitForAnimation(currentLiftedScrew.DropToOriginal, moveDuration);
+        
+        // ✅ MỞ KHÓA bolt sau khi drop xong
+        if (sourceBolt != null)
+        {
+            animatingBolts.Remove(sourceBolt);
+            Debug.Log($"🔓 MỞ KHÓA Bolt {sourceBolt.name} sau drop. AnimatingBolts: {animatingBolts.Count}");
+        }
+        isAnimating = false;
         ResetLiftedScrew();
     }
 
@@ -124,10 +177,66 @@ public class BoltLogicManager : MonoBehaviour
         var sortScrew = GamePlayerController.Instance?.gameContaint?.sortScrew;
         if (sortScrew != null)
         {
-            sortScrew.HandleScrewMovement(currentLiftedScrew, currentSourceBolt, targetBolt);
-            yield return new WaitForSeconds(moveDuration + 0.1f);
+            BotlBase sourceBolt = currentSourceBolt;
+            
+            // ✅ Khóa CÁ HAI bolt (source và target) khi bắt đầu animation
+            isAnimating = true;
+            if (sourceBolt != null)
+            {
+                animatingBolts.Add(sourceBolt);
+                Debug.Log($"🔒 KHÓA Source Bolt {sourceBolt.name} khi move. AnimatingBolts: {animatingBolts.Count}");
+            }
+            if (targetBolt != null)
+            {
+                animatingBolts.Add(targetBolt);
+                Debug.Log($"🔒 KHÓA Target Bolt {targetBolt.name} khi move. AnimatingBolts: {animatingBolts.Count}");
+            }
+            
+            // ✅ ĐỢI CALLBACK THẬT SỰ thay vì ước lượng thời gian
+            bool moveCompleted = false;
+            sortScrew.HandleScrewMovement(currentLiftedScrew, currentSourceBolt, targetBolt, () => {
+                moveCompleted = true;
+                Debug.Log("✅ Animation di chuyển hoàn thành!");
+            });
+            
+            yield return new WaitUntil(() => moveCompleted);
+            
+            // ✅ MỞ KHÓA CẢ 2 BOLT sau khi di chuyển xong
+            if (sourceBolt != null)
+            {
+                animatingBolts.Remove(sourceBolt);
+                Debug.Log($"🔓 MỞ KHÓA Source Bolt {sourceBolt.name} sau move. AnimatingBolts: {animatingBolts.Count}");
+            }
+            if (targetBolt != null)
+            {
+                animatingBolts.Remove(targetBolt);
+                Debug.Log($"🔓 MỞ KHÓA Target Bolt {targetBolt.name} sau move. AnimatingBolts: {animatingBolts.Count}");
+            }
+            isAnimating = false;
             ResetLiftedScrew();
         }
+    }
+    
+    private int CalculateMoveCount(BotlBase source, BotlBase target, int screwId)
+    {
+        if (source == null || target == null) return 0;
+        
+        // Đếm số ốc cùng màu liên tiếp từ trên xuống
+        int consecutive = 0;
+        if (source.screwBases != null)
+        {
+            for (int i = source.screwBases.Count - 1; i >= 0; i--)
+            {
+                if (source.screwBases[i]?.id == screwId)
+                    consecutive++;
+                else
+                    break;
+            }
+        }
+        
+        // Tính số slot khả dụng
+        int available = target.SlotsAvailable();
+        return Mathf.Min(consecutive, available);
     }
 
     private IEnumerator SwapScrews(BotlBase targetBolt, ScrewBase targetTopScrew)
@@ -140,7 +249,16 @@ public class BoltLogicManager : MonoBehaviour
         {
             currentLiftedScrew = targetTopScrew;
             currentSourceBolt = targetBolt;
+            
+            // ✅ KHÓA target bolt khi lift
+            isAnimating = true;
+            animatingBolts.Add(targetBolt);
+            
             yield return WaitForAnimation(targetTopScrew.LiftUp, uniformLiftHeight, liftDuration);
+            
+            // ✅ MỞ KHÓA target bolt sau khi lift xong
+            animatingBolts.Remove(targetBolt);
+            isAnimating = false;
         }
     }
 
@@ -205,6 +323,8 @@ public class BoltLogicManager : MonoBehaviour
         ResetLiftedScrew();
         clickQueue.Clear();
         isProcessing = false;
+        isAnimating = false;
+        animatingBolts.Clear(); // ✅ Clear tất cả bolt đang bị khóa
     }
 
     public bool HasLiftedScrew() => currentLiftedScrew != null && currentSourceBolt != null;
@@ -212,7 +332,7 @@ public class BoltLogicManager : MonoBehaviour
     public BotlBase GetCurrentSourceBolt() => currentSourceBolt;
     public int GetQueueSize() => clickQueue.Count;
     public bool IsCurrentlyProcessing() => isProcessing;
-    public bool IsCurrentlyAnimating() => isProcessing;
+    public bool IsCurrentlyAnimating() => isAnimating;
 
     public void SetLiftedScrew(ScrewBase screw, BotlBase sourceBolt)
     {

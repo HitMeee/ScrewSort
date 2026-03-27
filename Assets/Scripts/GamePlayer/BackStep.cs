@@ -121,7 +121,8 @@ public class BackStep : MonoBehaviour
     {
         if (bolt?.postBolts != null && index >= 0 && index < bolt.postBolts.Count)
         {
-            return bolt.postBolts[index].transform.position;
+            // ✅ Áp dụng offset giống như khi sinh ra trong BotlBase.Init()
+            return bolt.postBolts[index].transform.position + new Vector3(-0.05f, 0f, 0.05f);
         }
         return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f);
     }

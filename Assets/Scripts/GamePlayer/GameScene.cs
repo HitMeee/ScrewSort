@@ -65,7 +65,22 @@ public class GameScene : MonoBehaviour
         if (levelCompleted) return;
 
         levelCompleted = true;
-        Debug.Log("🏆 Level Complete!");
+        int currentLevelId = LevelFileManager.GetCurrentLevelId();
+        
+        // � LUÔN UNLOCK LEVEL TIẾP THEO ngay khi hoàn thành (không cần ấn Next)
+        LevelFileManager.CompleteLevel(currentLevelId);
+        Debug.Log($"🏆 Level {currentLevelId} Complete! Đã unlock Level {currentLevelId + 1}");
+        
+        // 🎮 LOG thông tin mode
+        LevelFileManager.PlayMode playMode = LevelFileManager.GetPlayMode();
+        if (playMode == LevelFileManager.PlayMode.Progress)
+        {
+            Debug.Log($"📊 Mode: TIẾN ĐỘ CHÍNH - Đã lưu tiến độ");
+        }
+        else
+        {
+            Debug.Log($"🎮 Mode: CHƠI TỰ DO - Vẫn unlock level tiếp theo");
+        }
 
         // ✅ PHÁT ÂM THANH HOÀN THÀNH LEVEL
         if (SoundManager.Instance != null)
@@ -186,7 +201,15 @@ public class GameScene : MonoBehaviour
     // UI Button Methods
     public void OnReplayClicked() => ReloadCurrentLevel();
     public void OnNextClicked() => LoadNextLevel();
-    public void OnMenuClicked() => SceneManager.LoadScene(0);
+    public void OnMenuClicked()
+    {
+        // ✅ GỌI ADS KHI THOÁT VỀ MENU
+        if (AdsFrequencyManager.Instance != null)
+        {
+            AdsFrequencyManager.Instance.OnExitGameplay();
+        }
+        SceneManager.LoadScene(0);
+    }
 
     public void RestartFromLevel1()
     {

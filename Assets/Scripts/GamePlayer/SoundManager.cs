@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 public class SoundManager : MonoBehaviour
 {
@@ -23,6 +24,9 @@ public class SoundManager : MonoBehaviour
     [Header("Volume Settings")]
     [Range(0f, 1f)] public float sfxVolume = 0.7f;
 
+    [SerializeField] private AudioClip collectCoinSound;
+    [SerializeField] private AudioClip loseSound;
+
     private void Awake()
     {
         if (Instance == null)
@@ -36,6 +40,24 @@ public class SoundManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+    }
+    
+    public void PlayCollectCoin(int count = 10)
+    {
+        StartCoroutine(PlayMultiCoinCollect(count));
+    }
+    private IEnumerator PlayMultiCoinCollect(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            PlaySFX(collectCoinSound, "Coin Collect", 0.8f);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    public void PlayLoseSound()
+    {
+        PlaySFX(loseSound, "Lose Sound", 2f);
     }
 
     private void InitializeAudioSources()
@@ -117,7 +139,7 @@ public class SoundManager : MonoBehaviour
 
     public void PlayLevelComplete()
     {
-        PlaySFX(levelCompleteSound, "Level Complete");
+        PlaySFX(levelCompleteSound, "Level Complete", 2f);
     }
 
     // BOLT COMPLETION SOUND (only for full 5-screw completion)

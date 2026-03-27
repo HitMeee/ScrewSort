@@ -21,7 +21,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject star2;
     [SerializeField] private GameObject star3;
     [SerializeField] private TextMeshProUGUI rewardText;
-    [SerializeField] private Button ClosePoppup; // Text hiển thị +30, +45, +60
+    [SerializeField] private Button ClosePoppup;
+    [SerializeField] private CoinFlyEffect coinFlyEffect; // ✅ Hiệu ứng coin bay
 
     [Header("🛒 Buy Tool UI")]
     [SerializeField] private GameObject buyToolUI;
@@ -36,6 +37,8 @@ public class UIManager : MonoBehaviour
     [Header("💰 Not Enough Money UI")]
     [SerializeField] private GameObject notEnoughMoneyUI;
     [SerializeField] private Button notEnoughMoneyBackButton;
+    [SerializeField] private Button watchAdsButton;
+    [SerializeField] private GameObject PanelBlack;
 
     private ToolData currentToolToBuy;
     private GameScene gameScene;
@@ -121,7 +124,7 @@ public class UIManager : MonoBehaviour
     {
         completeUI.SetActive(false);
         nextButton.onClick.AddListener(OnNext);
-        
+
         // Mặc định ẩn tất cả sao
         if (star1 != null) star1.SetActive(false);
         if (star2 != null) star2.SetActive(false);
@@ -130,30 +133,37 @@ public class UIManager : MonoBehaviour
 
     public void ShowComplete(int stars = 1)
     {
-        // Lưu số sao để tính coin reward sau
-        currentStars = stars;
-        
-        // Hiển thị popup ngay lập tức
-        completeUI.SetActive(true);
-        
-        // Cập nhật reward text theo số sao
-        UpdateRewardText(stars);
-        
-        // Ẩn tất cả sao trước
-        if (star1 != null) star1.SetActive(false);
-        if (star2 != null) star2.SetActive(false);
-        if (star3 != null) star3.SetActive(false);
-        
-        // Bắt đầu coroutine để hiển thị sao với animation
-        StartCoroutine(ShowStarsWithAnimation(stars));
-        
-        Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+        if (completeUI != null)
+        {
+            nextButton.interactable = true; // Đảm bảo nút Next có thể nhấn được khi hiển thị popup
+            ClosePoppup.interactable = true; // Đảm bảo nút Close có thể
+                                             // Lưu số sao để tính coin reward sau
+            currentStars = stars;
+            PanelBlack.SetActive(true);
+            // Hiển thị popup ngay lập tức
+            completeUI.SetActive(true);
+            completeUI.transform.localScale = Vector3.zero;
+            completeUI.transform.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
+
+            // Cập nhật reward text theo số sao
+            UpdateRewardText(stars);
+
+            // Ẩn tất cả sao trước
+            if (star1 != null) star1.SetActive(false);
+            if (star2 != null) star2.SetActive(false);
+            if (star3 != null) star3.SetActive(false);
+
+            // Bắt đầu coroutine để hiển thị sao với animation
+            StartCoroutine(ShowStarsWithAnimation(stars));
+
+            Debug.Log($"⭐ Sẽ hiển thị {stars} sao sau 0.5s với animation");
+        }
     }
-    
+
     private void UpdateRewardText(int stars)
     {
         if (rewardText == null) return;
-        
+
         int reward = 0;
         switch (stars)
         {
@@ -162,37 +172,37 @@ public class UIManager : MonoBehaviour
             case 3: reward = 60; break;
             default: reward = 30; break;
         }
-        
+
         rewardText.text = "+" + reward;
         Debug.Log($"💰 Cập nhật reward text: +{reward}");
     }
-    
+
     private IEnumerator ShowStarsWithAnimation(int stars)
     {
         // Delay 0.5s trước khi hiển thị sao
         yield return new WaitForSeconds(0.5f);
-        
+
         // Hiển thị Star 1 nếu có
         if (stars >= 1 && star1 != null)
         {
             star1.SetActive(true);
             star1.transform.localScale = Vector3.one * 0.3f;
             star1.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
-            
+
             // Delay nhỏ giữa các sao
             yield return new WaitForSeconds(0.2f);
         }
-        
+
         // Hiển thị Star 2 nếu có
         if (stars >= 2 && star2 != null)
         {
             star2.SetActive(true);
             star2.transform.localScale = Vector3.one * 0.3f;
             star2.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
-            
+
             yield return new WaitForSeconds(0.2f);
         }
-        
+
         // Hiển thị Star 3 nếu có
         if (stars >= 3 && star3 != null)
         {
@@ -200,24 +210,61 @@ public class UIManager : MonoBehaviour
             star3.transform.localScale = Vector3.one * 0.3f;
             star3.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack);
         }
-        
+
         Debug.Log($"✨ Đã hiển thị {stars} sao với animation");
     }
 
     private void OnNext()
     {
+        PanelBlack.SetActive(false);
         // ✅ PHÁT ÂM THANH BUTTON
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.PlayButtonClick();
         }
 
-        // Tính coin reward theo số sao
-        coinManager.AddLevelReward(currentStars);
-        completeUI.SetActive(false);
+        // ✅ GỌI ADS FREQUENCY MANAGER KHI THẮNG
+        if (AdsFrequencyManager.Instance != null)
+        {
+            AdsFrequencyManager.Instance.OnLevelWin();
+        }
 
-        var gameScene = FindObjectOfType<GameScene>();
-        gameScene.LoadNextLevel();
+        DOVirtual.DelayedCall(0.8f, () =>
+        {
+            SoundManager.Instance.PlayCollectCoin();
+        });
+        nextButton.interactable = false;
+        ClosePoppup.interactable = false;
+
+        // ✅ CHẠY HIỆU ỨNG COIN BAY
+        if (coinFlyEffect != null)
+        {
+            coinFlyEffect.PlayCoinFlyEffect();
+
+            // Delay để chờ coin bay xong rồi mới thực hiện logic tiếp
+            float totalDelay = coinFlyEffect.GetTotalAnimationTime();
+            DOVirtual.DelayedCall(totalDelay, () =>
+            {
+                // Tính coin reward theo số sao
+                coinManager.AddLevelReward(currentStars);
+                completeUI.SetActive(false);
+
+                var gameScene = FindObjectOfType<GameScene>();
+                gameScene.LoadNextLevel();
+            });
+        }
+        else
+        {
+            // Nếu không có effect thì chạy logic cũ
+            coinManager.AddLevelReward(currentStars);
+            completeUI.SetActive(false);
+
+            nextButton.interactable = true;
+            ClosePoppup.interactable = true;// Reset trạng thái button cho lần sau
+
+            var gameScene = FindObjectOfType<GameScene>();
+            gameScene.LoadNextLevel();
+        }
     }
 
     // ===== BUY TOOL UI =====
@@ -238,18 +285,36 @@ public class UIManager : MonoBehaviour
         if (toolImageDisplay != null) toolImageDisplay.sprite = toolData.imageTools;
         if (priceText != null) priceText.text = toolData.price.ToString();
 
-        if (buyToolUI != null) buyToolUI.SetActive(true);
+        PanelBlack.SetActive(true);
+        if (buyToolUI != null)
+        {
+            buyToolUI.SetActive(true);
+            buyToolUI.transform.localScale = Vector3.zero;
+            buyToolUI.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        }
+        Time.timeScale = 0f;
     }
 
     public void HideBuyToolUI()
     {
-        if (buyToolUI != null) buyToolUI.SetActive(false);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
+        }
+
+        if (buyToolUI != null)
+        {
+            buyToolUI.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack)
+                .OnComplete(() => buyToolUI.SetActive(false));
+        }
+        PanelBlack.SetActive(false);
+        buyToolUI.SetActive(false);
         currentToolToBuy = null;
+        Time.timeScale = 1f;
     }
 
     private void OnBuyTool()
     {
-        // ✅ PHÁT ÂM THANH BUTTON
         if (SoundManager.Instance != null)
         {
             SoundManager.Instance.PlayButtonClick();
@@ -276,6 +341,11 @@ public class UIManager : MonoBehaviour
         {
             notEnoughMoneyBackButton.onClick.AddListener(HideNotEnoughMoneyUI);
         }
+
+        if (watchAdsButton != null)
+        {
+            watchAdsButton.onClick.AddListener(OnWatchAds);
+        }
     }
 
     public void ShowNotEnoughMoneyUI()
@@ -284,7 +354,14 @@ public class UIManager : MonoBehaviour
 
         // ✅ ẨN BUY TOOL UI VÀ HIỆN NOT ENOUGH MONEY UI
         HideBuyToolUI();
-        notEnoughMoneyUI.SetActive(true);
+        PanelBlack.SetActive(true);
+        if (notEnoughMoneyUI != null)
+        {
+            notEnoughMoneyUI.SetActive(true);
+            notEnoughMoneyUI.transform.localScale = Vector3.zero;
+            notEnoughMoneyUI.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        }
+        Time.timeScale = 0f; // Tạm dừng game khi mở UI
 
         Debug.Log("💰 Showing not enough money UI");
     }
@@ -299,10 +376,87 @@ public class UIManager : MonoBehaviour
 
         if (notEnoughMoneyUI != null)
         {
-            notEnoughMoneyUI.SetActive(false);
+            PanelBlack.SetActive(false);
+            notEnoughMoneyUI.transform.DOScale(0f, 0.3f).SetEase(Ease.InBack).SetUpdate(true)
+                .OnComplete(() => notEnoughMoneyUI.SetActive(false));
+        }
+        Time.timeScale = 1f; // Resume game when closing UI
+        Debug.Log("💰 Hidden not enough money UI");
+    }
+
+    // ===== 📺 WATCH ADS FOR COINS =====
+    private void OnWatchAds()
+    {
+        // ✅ PHÁT ÂM THANH BUTTON
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayButtonClick();
         }
 
-        Debug.Log("💰 Hidden not enough money UI");
+        Debug.Log("📺 Người dùng nhấn Watch Ads");
+
+        // ✅ ẨN POPUP NGAY KHI BẮT ĐẦU XEM ADS
+        HideNotEnoughMoneyUI();
+
+        // Tạm dừng time scale về 1 để ads có thể hiển thị
+        Time.timeScale = 1f;
+
+        // Gọi Rewarded Ad
+        if (AdsManager.Instance != null)
+        {
+            AdsManager.Instance.ShowRewardedAd((reward) =>
+            {
+                // ✅ Callback này CHỈ ĐƯỢC GỌI KHI NGƯỜI DÙNG ĐÓNG ADS
+                Debug.Log($"✅ Người dùng đã ĐÓNG ads! Nhận thưởng: {reward.Amount} {reward.Type}");
+
+                // ✅ CỘNG COIN NGAY KHI ĐÓNG ADS (không cần delay nữa)
+                if (coinManager != null)
+                {
+                    coinManager.AddCoinsWithAnimation(100, 1.5f);
+                    Debug.Log("💰 Đang cộng 100 coin với animation!");
+                    
+                    // ✅ PHÁT ÂM THANH COIN
+                    if (SoundManager.Instance != null)
+                    {
+                        SoundManager.Instance.PlayCollectCoin();
+                    }
+                }
+
+                // Có thể thử mua lại tool nếu đủ tiền
+                if (currentToolToBuy != null)
+                {
+                    var toolManager = FindObjectOfType<ToolManager>();
+                    if (toolManager != null && coinManager != null)
+                    {
+                        // Delay nhỏ để người dùng nhìn thấy coin tăng
+                        DOVirtual.DelayedCall(0.5f, () =>
+                        {
+                            // Kiểm tra lại xem đã đủ tiền chưa
+                            if (coinManager.GetCoins() >= currentToolToBuy.price)
+                            {
+                                Debug.Log("✅ Đã đủ tiền! Hiển thị lại popup mua tool.");
+                                ShowBuyToolUI(currentToolToBuy);
+                            }
+                            else
+                            {
+                                Debug.Log("⚠️ Vẫn chưa đủ tiền để mua tool.");
+                            }
+                        });
+                    }
+                }
+
+                // Resume time scale nếu không có UI nào hiển thị
+                if (!IsAnyUIActive())
+                {
+                    Time.timeScale = 1f;
+                }
+            });
+        }
+        else
+        {
+            Debug.LogError("❌ AdsManager không tồn tại!");
+            Time.timeScale = 0f; // Quay lại time scale 0 nếu không có ads
+        }
     }
 
     // ===== PUBLIC METHODS =====

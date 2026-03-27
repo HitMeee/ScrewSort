@@ -18,7 +18,8 @@ public class BotlBase : MonoBehaviour
         for (int i = 0; i < postBolts.Count && i < lsId.Count; i++)
         {
             var screw = Instantiate(screwPrefab);
-            screw.transform.position = postBolts[i].transform.position;
+            // ✅ Dịch ốc sang trái 0.05 đơn vị và lùi đằng sau 0.05 đơn vị so với đinh
+            screw.transform.position = postBolts[i].transform.position + new Vector3(-0.05f, 0f, 0.05f);
             screw.Init(lsId[i]);
             screwBases.Add(screw);
         }

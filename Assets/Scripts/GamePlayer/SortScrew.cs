@@ -7,6 +7,10 @@ public class SortScrew : MonoBehaviour
     public ScrewMover mover;
     public BoltChecker checker;
     private BackStep backStep;
+    
+    // ✅ THÊM: Track xem có animation đang chạy không
+    private bool isAnimating = false;
+    public bool IsAnimating() => isAnimating;
 
     public void Init()
     {
@@ -21,9 +25,13 @@ public class SortScrew : MonoBehaviour
     }
 
     // Hàm chính xử lý di chuyển
-    public void HandleScrewMovement(ScrewBase lifted, BotlBase source, BotlBase target)
+    public void HandleScrewMovement(ScrewBase lifted, BotlBase source, BotlBase target, System.Action onComplete = null)
     {
-        if (lifted == null || source == null || target == null) return;
+        if (lifted == null || source == null || target == null)
+        {
+            onComplete?.Invoke();
+            return;
+        }
 
         // ✅ SAVE STATE BEFORE ANY MOVEMENT - Using new English method name
         if (backStep != null && source != target)
@@ -34,58 +42,78 @@ public class SortScrew : MonoBehaviour
         // Cùng bolt - thả xuống
         if (source == target)
         {
-            lifted.DropToOriginal(mover.moveDuration);
+            isAnimating = true;
+            lifted.DropToOriginal(mover.moveDuration, () => {
+                isAnimating = false;
+                onComplete?.Invoke();
+            });
             return;
         }
 
         // Bolt trống
         if (target.screwBases.Count == 0)
         {
-            MoveBatch(lifted, source, target);
+            MoveBatch(lifted, source, target, onComplete);
             return;
         }
 
         var topTarget = target.GetTopScrew();
         if (topTarget == null)
         {
-            lifted.DropToOriginal(mover.moveDuration);
+            isAnimating = true;
+            lifted.DropToOriginal(mover.moveDuration, () => {
+                isAnimating = false;
+                onComplete?.Invoke();
+            });
             return;
         }
 
         // Khác màu - swap
         if (topTarget.id != lifted.id)
         {
-            SwapScrews(lifted, source, target, topTarget);
+            SwapScrews(lifted, source, target, topTarget, onComplete);
         }
         // Cùng màu - di chuyển batch
         else
         {
-            MoveBatch(lifted, source, target);
+            MoveBatch(lifted, source, target, onComplete);
         }
 
         checker.CheckAfterMove(source, target);
     }
 
     // ✅ ĐƠN GIẢN HÓA: Di chuyển batch (không cần ghi lại riêng)
-    private void MoveBatch(ScrewBase lifted, BotlBase source, BotlBase target)
+    private void MoveBatch(ScrewBase lifted, BotlBase source, BotlBase target, System.Action onComplete = null)
     {
         int moveCount = GetMoveCount(source, target, lifted.id);
 
         if (moveCount <= 0)
         {
-            lifted.DropToOriginal(mover.moveDuration);
+            isAnimating = true;
+            lifted.DropToOriginal(mover.moveDuration, () => {
+                isAnimating = false;
+                onComplete?.Invoke();
+            });
             return;
         }
 
         // ✅ SỬA: Sử dụng Coroutine để delay giữa các screws
-        StartCoroutine(ExecuteMoveWithDelay(source, target, moveCount, lifted.id));
+        isAnimating = true;
+        StartCoroutine(ExecuteMoveWithDelay(source, target, moveCount, lifted.id, () => {
+            isAnimating = false;
+            onComplete?.Invoke();
+        }));
     }
 
     // ✅ ĐƠN GIẢN HÓA: Swap screws (không cần ghi lại riêng)
-    private void SwapScrews(ScrewBase lifted, BotlBase source, BotlBase target, ScrewBase topTarget)
+    private void SwapScrews(ScrewBase lifted, BotlBase source, BotlBase target, ScrewBase topTarget, System.Action onComplete = null)
     {
         // Thả screw xuống
-        lifted.DropToOriginal(mover.moveDuration);
+        isAnimating = true;
+        lifted.DropToOriginal(mover.moveDuration, () => {
+            isAnimating = false;
+            onComplete?.Invoke();
+        });
 
         // Nâng screw khác lên
         var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
@@ -120,9 +148,11 @@ public class SortScrew : MonoBehaviour
         return count;
     }
 
-    // ✅ MỚI: Thực hiện di chuyển với delay 0.1s giữa các screw
-    private IEnumerator ExecuteMoveWithDelay(BotlBase source, BotlBase target, int count, int screwId)
+    // ✅ SỬA: Thực hiện di chuyển từng ốc với animation 3 bước: Lên → Ngang → Xuống
+    private IEnumerator ExecuteMoveWithDelay(BotlBase source, BotlBase target, int count, int screwId, System.Action onComplete = null)
     {
+        var boltManager = GamePlayerController.Instance?.gameContaint?.boltLogicManager;
+        
         for (int i = 0; i < count; i++)
         {
             var screw = source.GetTopScrew();
@@ -130,6 +160,16 @@ public class SortScrew : MonoBehaviour
 
             // Lưu scale gốc
             Vector3 originalScale = screw.transform.localScale;
+
+            // ✅ BƯỚC 1: Nâng ốc lên (nếu chưa lifted)
+            if (!screw.isLifted && boltManager != null)
+            {
+                bool liftCompleted = false;
+                screw.LiftUp(boltManager.uniformLiftHeight, boltManager.liftDuration, () => {
+                    liftCompleted = true;
+                });
+                yield return new WaitUntil(() => liftCompleted);
+            }
 
             // Cập nhật data
             source.RemoveScrew(screw);
@@ -139,7 +179,7 @@ public class SortScrew : MonoBehaviour
             // Khôi phục scale
             screw.transform.localScale = originalScale;
 
-            // Animation
+            // ✅ BƯỚC 2 & 3: Di chuyển ngang → xuống (đã có trong MoveTo)
             Vector3 pos = GetPosition(target, target.screwBases.Count - 1);
 
             bool moveCompleted = false;
@@ -155,12 +195,15 @@ public class SortScrew : MonoBehaviour
             // Đợi animation hoàn thành
             yield return new WaitUntil(() => moveCompleted);
 
-            // ✅ Delay 0.1s giữa các screw (trừ screw cuối cùng)
+            // ✅ Delay giữa các ốc (trừ ốc cuối cùng)
             if (i < count - 1)
             {
-                yield return new WaitForSeconds(0.02f);
+                yield return new WaitForSeconds(0.01f); // Giảm từ 0.02f để nhanh hơn
             }
         }
+        
+        // ✅ GỌI CALLBACK KHI HOÀN THÀNH TẤT CẢ
+        onComplete?.Invoke();
     }
 
 
@@ -169,9 +212,10 @@ public class SortScrew : MonoBehaviour
     {
         if (bolt?.postBolts != null && index >= 0 && index < bolt.postBolts.Count)
         {
-            return bolt.postBolts[index].transform.position;
+            // ✅ Dịch ốc sang trái 0.05 đơn vị và lùi đằng sau 0.05 đơn vị so với đinh
+            return bolt.postBolts[index].transform.position + new Vector3(-0.05f, 0f, 0.05f);
         }
-        return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f);
+        return bolt.transform.position + Vector3.up * (index * 0.3f + 0.2f) + new Vector3(-0.05f, 0f, 0.05f);
     }
 
     // Public methods
