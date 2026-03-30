@@ -16588,8 +16588,6 @@ MonoBehaviour:
   - {fileID: 1285045558}
   - {fileID: 447003757}
   - {fileID: 663854684}
-  - {fileID: 1999240293}
-  - {fileID: 191314233}
   btnPrevMap: {fileID: 150044240}
   btnNextMap: {fileID: 1617358534}
   btnCloseMap: {fileID: 1861239555}
@@ -22059,7 +22057,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &338228204
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23733,7 +23731,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &365247553
 RectTransform:
   m_ObjectHideFlags: 0
@@ -39155,7 +39153,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &663854685
 RectTransform:
   m_ObjectHideFlags: 0
@@ -54754,7 +54752,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &917397127
 RectTransform:
   m_ObjectHideFlags: 0
@@ -85317,7 +85315,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1356783464
 RectTransform:
   m_ObjectHideFlags: 0

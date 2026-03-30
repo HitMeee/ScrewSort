@@ -9,7 +9,8 @@ public class LevelButton : MonoBehaviour
     
     [Header("References")]
     [SerializeField] private ShowPopupLevel popupController;
-    [SerializeField] private GameObject lockObject; 
+    [SerializeField] private GameObject lockObject;
+    private Button button;
     private bool isUnlocked = false;
     
     private void Start()
@@ -19,21 +20,50 @@ public class LevelButton : MonoBehaviour
             popupController = FindObjectOfType<ShowPopupLevel>();
         }
 
+        // Tự động lấy Button component
+        button = GetComponent<Button>();
+        
+        // Gán sự kiện click
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(OnButtonClick);
+        }
+
         UpdateLockState(); 
     }
+    
     private void UpdateLockState()
     {
         isUnlocked = LevelFileManager.IsLevelUnlocked(levelId);
         
-        // Cập nhật UI
         if (lockObject != null)
         {
             lockObject.SetActive(!isUnlocked); 
         }
+
+        if (button != null)
+        {
+            button.interactable = isUnlocked;
+        }
     }
+    
+    // ✅ Method xử lý click
+    public void OnButtonClick()
+    {
+        if (!isUnlocked) return;
+
+        if (popupController != null)
+        {
+            popupController.ShowPopupForLevel(levelId);
+            Debug.Log($"🎯 Chọn Level {levelId}");
+        }
+    }
+    
     public void SetLevelId(int id)
     {
-        UpdateLockState(); // 🔒 Cập nhật trạng thái lock khi set ID mới
+        levelId = id; // ✅ QUAN TRỌNG: Phải set levelId
+        UpdateLockState();
     }
     
     public void RefreshLockState()

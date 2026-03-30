@@ -11,6 +11,7 @@ public class BoltChecker : MonoBehaviour
 
         // Bolt đầy (5 screws) → không nhận thêm
         if (target.screwBases.Count >= 5) return false;
+        Debug.Log("ok");
 
         // Bolt trống → có thể nhận
         if (target.screwBases.Count == 0) return true;
