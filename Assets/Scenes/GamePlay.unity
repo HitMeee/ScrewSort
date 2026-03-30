@@ -781,11 +781,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   levelController: {fileID: 1943911444}
+<<<<<<< HEAD
+  currentLevelId: 2
+  levelName: Level 2
+  levelTime: 10
+  boltSetups:
+  - screwIds: 010000000100000001000000
+  - screwIds: 0200000002000000
+  - screwIds: 0100000001000000
+  - screwIds: 020000000200000002000000
+=======
   currentLevelId: 1
   levelName: Level 70
   levelTime: 160
   searchLevelId: 1
   boltSetups:
+<<<<<<< HEAD
   - screwIds: 0100000002000000050000000300000004000000
   - screwIds: 0500000001000000020000000000000003000000
   - screwIds: 00000000030000000400000001000000
@@ -793,6 +804,13 @@ MonoBehaviour:
   - screwIds: 0400000000000000030000000500000001000000
   - screwIds: 0200000005000000010000000400000000000000
   - screwIds: 02000000
+=======
+  - screwIds: 03000000
+  - screwIds: 0200000003000000020000000300000002000000
+  - screwIds: 03000000020000000300000002000000
+  - screwIds: 
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
+>>>>>>> b1e659a24c018b376957895301b326a1eaecf468
 --- !u!1 &142519109
 GameObject:
   m_ObjectHideFlags: 0
@@ -1605,7 +1623,11 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
+<<<<<<< HEAD
+  m_AnchoredPosition: {x: -24, y: -42}
+=======
   m_AnchoredPosition: {x: -55, y: -44}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &288409086
@@ -2093,7 +2115,11 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
+<<<<<<< HEAD
+  m_AnchoredPosition: {x: -199, y: -938}
+=======
   m_AnchoredPosition: {x: 37, y: -933}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_SizeDelta: {x: 300, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &345904663
@@ -2186,7 +2212,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
+<<<<<<< HEAD
+  m_Sprite: {fileID: 21300000, guid: 5d1e09fb33921ab4fa2ac36add2c490e, type: 3}
+=======
   m_Sprite: {fileID: 1472636092, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2932,7 +2962,11 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
+<<<<<<< HEAD
+  m_AnchoredPosition: {x: -37, y: -42}
+=======
   m_AnchoredPosition: {x: -68, y: -47}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &655396310
@@ -6967,8 +7001,13 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
+<<<<<<< HEAD
+  m_AnchoredPosition: {x: 238, y: -989}
+  m_SizeDelta: {x: 300, y: 300}
+=======
   m_AnchoredPosition: {x: 420, y: -989}
   m_SizeDelta: {x: 301, y: 300}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1304203639
 MonoBehaviour:
@@ -7060,7 +7099,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
+<<<<<<< HEAD
+  m_Sprite: {fileID: 21300000, guid: 62649ce17c64e4f4aa68e9e74645353b, type: 3}
+=======
   m_Sprite: {fileID: -2052118118, guid: 47b5ec3d66b3fa54d9b3d618711bba22, type: 3}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -10673,7 +10716,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
+<<<<<<< HEAD
+  m_Color: {r: 0.21960784, g: 0.21960784, b: 0.21960784, a: 0}
+=======
   m_Color: {r: 1, g: 1, b: 1, a: 1}
+>>>>>>> a8dc09da0402a7e10428cc40d6d550482f4f8125
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
